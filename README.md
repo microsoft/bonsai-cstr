@@ -14,7 +14,10 @@ transition from stable to unstable and back to stable as the conversion
 rate increases. The reactor dynamics are modeled in Simulink. The
 controlled variables (states) are the residual concentration  and the
 reactor temperature , and the manipulated variable (action) is the
-temperature  of the coolant circulating in the reactor's cooling jacket.
+temperature of the coolant circulating in the reactor's cooling jacket.
+
+Comparison of Bonsai brain against adaptive PI controller with and
+without stochastic noise on sensors in [results.pdf](results.pdf)
 
 ![CSTR Schematic](img/cstr_diagram.jpg)
 
