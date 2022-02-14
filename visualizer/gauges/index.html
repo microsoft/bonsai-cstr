@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Bonsai CSTR Visualizer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        @import url('./reset.css');
+        @import url('./styles.css');
+    </style>
+
+    <script type="text/javascript" src="./gauge.js"> </script>
+    <script language="JavaScript">
+        /*
+         * Copyright: Microsoft 2022.
+         *
+         * An example visualizer for use with CSTR simulators.
+         */
+        const svgns = "http://www.w3.org/2000/svg";
+        const params = new URLSearchParams(window.location.search);
+        const darkMode = params.get("_theme") === "dark";
+        const debug = params.get("debug") === "true";
+
+        // set on load()
+        let crgauge = undefined;
+        let trgauge = undefined;
+        let tcgauge = undefined;
+
+        const Cr = 0;
+
+        // Cref: desired concentration
+        const Cref = 8;
+
+        // Tr : reactor temperature
+        const Tr = 0;
+
+        //Tref: desired temperature
+        const Tref = 373.13;
+
+        // Tc : cooling jacket medium temperature
+        const Tc = 0;
+
+        // Tc_adjust: coolant temp adjustment
+        const Tc_Adjust = 0;
+        // utility setAttributes
+        function setAttributes(el, attributes) {
+            for (var attr in attributes) el.setAttribute(attr, attributes[attr]);
+        }
+
+        // setup the document
+        function setup() {
+            try {
+                //https://github.com/naikus/svg-gauge/blob/master/src/gauge.js
+                crgauge = Gauge(
+                    document.getElementById("cr_gauge"),
+                    {
+                        min: -0.1,
+                        max: 12,
+                        dialStartAngle: 180,
+                        dialEndAngle: 0,
+                        easing: true,
+                        value: 0,
+                        viewBox: "0 0 100 57",
+                        label: function (value) {
+                            return value + " kmol/m³";
+                        },
+                        color: function (value) {
+                            return "#f7aa38"; //Orange
+                        }
+                    }
+                );
+
+                trgauge = Gauge(
+                    document.getElementById("tr_gauge"),
+                    {
+                        min: 10,
+                        max: 800,
+                        dialStartAngle: 180,
+                        dialEndAngle: 0,
+                        easing: true,
+                        value: 0,
+                        viewBox: "0 0 100 57",
+                        label: function (value) {
+                            return value.toFixed(1) + " K";
+                        },
+                        color: function (value) {
+                            if (value < 350) {
+                                return "#5ee432"; //Green
+                            } else if (value < 400) {
+                                return "#fffa50"; //Yellow
+                            } else if (value >= 400) {
+                                return "#ef4655"; //Red
+                            } else {
+                                return "#f7aa38"; //Orange
+                            }
+                        }
+                    }
+                );
+
+                tcgauge = Gauge(
+                    document.getElementById("tc_gauge"),
+                    {
+                        min: 10,
+                        max: 800,
+                        dialStartAngle: 180,
+                        dialEndAngle: 0,
+                        easing: true,
+                        value: 297.9798,
+                        viewBox: "0 0 100 57",
+                        label: function (value) {
+                            return value.toFixed(1) + " K";
+                        },
+                        color: function (value) {
+                            return "#a9e2ea";
+                        }
+                    }
+                );
+
+                // adjust our colors based upon theme.
+                if (darkMode) {
+                    document.body.style.backgroundColor = "#333";
+                    document.body.style.color = "white";
+                }
+            } catch (e) {
+                // ignore
+            }
+
+            // loading text
+            if (debug) {
+                const out = document.getElementById("out");
+                out.textContent = "Waiting...";
+            }
+            // initial update
+            update({
+                state: {
+                    Cr: 2.142201781772368,
+                    Cref: 2,
+                    Tc: 297, //.9798,
+                    Tr: 340,
+                    Tref: 373  //.1311262173828
+                },
+                action: {
+                    Tc_adjust: 5//0.12269001454114914
+                },
+            });
+        }
+
+        // update the visualization from state and action data
+        function update(data) {
+            // convert message to formatted JSON text for display
+            const str = JSON.stringify(data, null, 2);
+
+            if (debug) {
+                const out = document.getElementById("out");
+                out.textContent = str;
+            }
+
+            try {
+                // update positions of graphical elements
+                // Cr : product specific residual concentration mixture of A and B
+                const Cr = parseFloat(data.state["Cr"].toFixed(2));
+
+                // Cref: desired concentration
+                const Cref = parseFloat(data.state["Cref"].toFixed(2));
+
+                // Tr : reactor temperature
+                const Tr = parseFloat(data.state["Tr"].toFixed(1));
+
+                //Tref: desired temperature
+                const Tref = parseFloat(data.state["Tref"].toFixed(1));
+
+                // Tc : cooling jacket medium temperature
+                const Tc = parseFloat(data.state["Tc"].toFixed(1));
+
+                // Tc_adjust: coolant temp adjustment
+                const Tc_Adjust = parseFloat(data.action["Tc_adjust"].toFixed(1));
+                //Update gauge values
+                crgauge.setValue(Cr, 1);
+                trgauge.setValue(Tr, 1);
+                tcgauge.setValue(Tc, 1);
+
+                //update labels
+                const trefLabel = document.getElementById("tref_label");
+                if (Tr >= 400) {
+                    trefLabel.style.color = "red";
+                    trefLabel.innerHTML = "THERMAL RUNAWAY";
+                }
+                else {
+                    trefLabel.style.color = "rgb(153, 153, 153)";
+                    trefLabel.innerHTML = "Tref: " + Tref.toFixed(1) + " K";
+                }
+
+
+                const crefLabel = document.getElementById("cref_label");
+                crefLabel.style.color = "rgb(153, 153, 153)";
+                crefLabel.innerHTML = "Cref: " + Cref.toFixed(2) + " kmol/m³";
+
+                const tcAdjustLabel = document.getElementById("tc_adjust_label");
+
+                //check for negative number, if not add a space
+                if (Tc_Adjust < 0) {
+                    tcAdjustLabel.innerHTML = "Tc_adjust: " + Tc_Adjust.toFixed(1) + " K";
+                }
+                else {
+                    tcAdjustLabel.innerHTML = "Tc_adjust: &nbsp" + Tc_Adjust.toFixed(1) + " K";
+                }
+
+            } catch (e) {
+                // ignore
+            }
+        }
+        //}
+        function init() {
+            // on load
+            window.addEventListener("load", () => {
+                setup();
+            });
+
+            // on message
+            window.addEventListener(
+                "message",
+                (event) => {
+                    const data = JSON.parse(event.data);
+                    update(data);
+                },
+                false
+            );
+        }
+    </script>
+</head>
+
+<body>
+    <pre id="out" style="font-size: x-small; display: box; position: absolute"></pre>
+    <div class="flex-container">
+        <div id="cr_gauge" class="gauge-container two" style="font-size: x-small ">
+            <span id="cr_label" style="font-size: x-large">Cr</span>
+        </div>
+        <div id="tc_gauge" class="gauge-container two" style="font-size: x-small ">
+            <span id="tc_label" style="font-size: x-large">Tc</span>
+        </div>
+        <div id="tr_gauge" class="gauge-container two" style="font-size: x-small">
+            <span id="tr_label" style="font-size: x-large ">Tr</span>
+        </div>
+    </div>
+    <div class="flex-container">
+        <div id="cref_label" class="ref-label">Cref:</div>
+        <div id="tc_adjust_label" class="ref-label blue" style="font-weight: bold; background-color: var(--blue)">
+            Tc_adjust:</div>
+        <div id="tref_label" class="ref-label">Tref:</div>
+    </div>
+
+    <script language="JavaScript">
+        init();
+    </script>
+</body>
+
+</html>
