@@ -1,0 +1,179 @@
+:root {
+    --coral: hsl(23, 83%, 82%);
+    --coral--b: hsl(23, 99%, 75%);
+    --pink: hsl(335, 52%, 92%);
+    --pink--b: hsl(335, 82%, 86%);
+    --yellow: hsl(42, 97%, 85%);
+    --yellow--b: hsl(42, 100%, 73%);
+    --green: hsl(100, 64%, 86%);
+    --green--b: hsl(100, 41%, 76%);
+    --blue: hsl(187, 61%, 79%);
+    --blue--b: hsl(187, 54%, 68%);
+    --purple: hsl(283, 24%, 86%);
+    --purple--b: hsl(283, 43%, 80%);
+  
+    /* https://www.fluid-type-scale.com/ */
+    --font-size-sm: clamp(0.8rem, 0.17vw + 0.76rem, 0.89rem);
+    --font-size-base: clamp(1rem, 0.34vw + 0.91rem, 1.19rem);
+    --font-size-md: clamp(1.25rem, 0.61vw + 1.1rem, 1.58rem);
+    --font-size-lg: clamp(1.56rem, 1vw + 1.31rem, 2.11rem);
+    --font-size-xl: clamp(1.95rem, 1.56vw + 1.56rem, 2.81rem); --light-gray-blue: hsl(182, 29%, 96%);
+  
+    --pageMax: 1260px;
+    --headerHeight: 60px;
+    --middleHeight: 300px;
+    --footerHeight: 100px;
+  }
+  
+  @import url("https://fonts.googleapis.com/css2?family=Inconsolata&display=swap");
+  
+  .coral {
+    background-color: var(--coral);
+    border: 1px solid var(--coral--b);
+  }
+  
+  .pink {
+    background-color: var(--pink);
+    border: 1px solid var(--pink--b);
+  }
+  
+  .yellow {
+    background-color: var(--yellow);
+    border: 1px solid var(--yellow--b);
+  }
+  
+  .green {
+    background-color: var(--green);
+    border: 1px solid var(--green--b);
+  }
+  
+  .blue {
+    background-color: var(--blue);
+    border: 1px solid var(--blue--b);
+  }
+  
+  .purple {
+    background-color: var(--purple);
+    border: 1px solid var(--purple--b)
+  }
+  
+  .white {
+    background-color: white;
+  }
+  
+  body {
+    font-family: monospace, monospace;
+  }
+  
+  .container {
+    display: grid;
+    grid-gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    width: 100%;
+    height: 100%;
+    place-items: center;
+  }
+  
+  .container>* {
+      /*aspect-ratio: 1 / 1;  a square */
+      border: 1px solid;
+      border-radius: 1rem;
+      font-size:"100%";
+      width: 300px; 
+      margin: 10px;
+      /* center */
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+  }
+  
+  .box {
+    border-radius: 1rem;
+    border-style: dashed;
+    width: 100%;
+  }
+  
+  .gauge-container {
+    width: 100%;
+    display: block;
+    padding: 10px;
+  }
+  
+  .gauge-container > label {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: inline-block;
+    background: rgba(0,0,0,0.5); 
+    font-size: 1.2em;
+    padding: 5px 10px;
+  }
+  
+  .gauge-container > .gauge .dial {
+    stroke: #334455;
+    stroke-width: 4;
+    /*fill: rgba(0,0,0,0); */
+  }
+  .gauge-container > .gauge .value {
+    stroke: rgb(47, 227, 255);
+    stroke-width: 4;
+    fill: rgba(0,0,0,0);
+  }
+  .gauge-container > .gauge .value-text {
+    /* font-family: sans-serif;
+    font-weight: bold;  */
+    font-size: 0.8em;
+  }
+  
+  .gauge-container.two {
+    height: auto;
+    border: 1px solid;
+  }
+  .gauge-container.two > .gauge > .dial {
+    stroke: #999999;
+    stroke-width: 10;
+  }
+  .gauge-container.two > .gauge > .value {
+    /*stroke: orange;*/
+    stroke-dasharray: none;
+    stroke-width: 8;
+  }
+
+  .ref-label {
+    height: auto;
+    border: 1px solid;
+  }
+
+  .text {
+    font-size: var(--font-size-xl);
+  }
+  
+  pre code {
+      font-size: var(--font-size-small);
+      display: block;
+      line-height: 1;
+      text-align: left;
+  }
+
+  .flex-container {
+    display: flex;
+    flex-wrap: nowrap;
+
+}
+
+.flex-container>* {
+    background-color: #ffffff;
+    width: 300px;
+    margin: 10px;
+    text-align: center;
+    line-height: 65px;
+    font-size: x-large;
+    border-radius: 1rem;
+    color: rgb(153, 153, 153);
+    font-weight: normal;
+    text-anchor: middle;
+}
+  
+  /* https://css-tricks.com/responsive-layouts-fewer-media-queries/ */
