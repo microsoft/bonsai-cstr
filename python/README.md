@@ -79,11 +79,11 @@ docker push <Registry>.azurecr.io/cstr_sim:v1
 
 Import the simulator in Bonsai Platform
 
-![Add new sim](img/add_sim.jpg)
+![Add new sim](img/add_sim.JPG)
 
-![Choose other sim](img/other_sim.jpg)
+![Choose other sim](img/other_sim.JPG)
 
-![Import simulator](img/import_sim.jpg)
+![Import simulator](img/import_sim.JPG)
 
 After this will just need to create a new brain, use the inkling file cstr_brain.ink to start training your new brain !
 
