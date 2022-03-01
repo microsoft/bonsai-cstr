@@ -47,7 +47,7 @@ This sample is largely adapted from the MathWorks':
 
 This section will show the steps to use the CSTR Python simulator in the Bonsai Platform.
 
-Build the Docker container with the Dockerfile
+### 1.Build the Docker container with the Dockerfile
 
 ```shell
 docker build -t cstr_sim -f Dockerfile ./
@@ -55,7 +55,9 @@ docker build -t cstr_sim -f Dockerfile ./
 
 Now you have two ways to run it via Bonsai Platform. 
 
-### 1. Import simulator
+### 2. Importing your simulator to Bonsai or Run it locally
+
+#### Import simulator
 
 Login to your ACR account 
 
@@ -85,7 +87,7 @@ Import the simulator in Bonsai Platform
 
 After this will just need to create a new brain, use the inkling file cstr_brain.ink to start training your new brain !
 
-### 2. Run locally
+#### Run locally
 
 In you machine run the Docker image pointed to your Bonsai workspace.
 
@@ -93,7 +95,7 @@ In you machine run the Docker image pointed to your Bonsai workspace.
 docker run --rm -it -e SIM_ACCESS_KEY=<Bonsai Access Key> -e SIM_API_HOST="https://api.bons.ai" -e SIM_WORKSPACE=<Bonsai Workspace ID> cstr_sim
 ```
 
-After this, your simulator will appears in the simulator tab.
+After this, your simulator will appear in the simulator tab.
 
 ## Actions (Manipulated Variables)
 
