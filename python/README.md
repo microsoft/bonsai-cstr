@@ -55,7 +55,7 @@ docker build -t cstr_sim -f Dockerfile ./
 
 Now you have two ways to run it via Bonsai Platform. 
 
-### 2. Importing your simulator to Bonsai or Run it locally
+### 2. Import your simulator to Bonsai or Run it locally
 
 #### Import simulator
 
@@ -79,23 +79,27 @@ docker push <Registry>.azurecr.io/cstr_sim:v1
 
 Import the simulator in Bonsai Platform
 
+Click on add new sim
 ![Add new sim](img/add_sim.JPG)
 
+Choose 'other sim'
 ![Choose other sim](img/other_sim.JPG)
 
+Import from your ACR to Bonsai Env and click on 'Create simulator'
 ![Import simulator](img/import_sim.JPG)
 
-After this will just need to create a new brain, use the inkling file cstr_brain.ink to start training your new brain !
+After this will just need to create a new brain, use the inkling file cstr_brain.ink to start training your new brain.
+
 
 #### Run locally
 
-In you machine run the Docker image pointed to your Bonsai workspace.
+In you machine run the Docker image pointed to your Bonsai workspace with the command below.
 
 ```shell
 docker run --rm -it -e SIM_ACCESS_KEY=<Bonsai Access Key> -e SIM_API_HOST="https://api.bons.ai" -e SIM_WORKSPACE=<Bonsai Workspace ID> cstr_sim
 ```
 
-After this, your simulator will appear in the simulator tab.
+After this, your simulator will appear in the simulator tab in the Bonsai Platform and you just have to create a new brain, use the inkling file cstr_brain.ink to start training your new brain.
 
 ## Actions (Manipulated Variables)
 
