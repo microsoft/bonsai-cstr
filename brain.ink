@@ -137,7 +137,7 @@ graph (input: ObservableState) {
             lesson `Lesson 1` {
                 scenario {
                     Cref_signal: number<5>, # Steady State of 8.57 kmol/m3
-                    noise_percentage: number<0 .. 6>,
+                    noise_percentage: number<0 .. 5>,
                 }
             }
         }
