@@ -1,6 +1,6 @@
 # Specific to bonsai-cstr
 benchmarkRMS.mat
-.env
+keys.env
 resources/
 *.csv
 

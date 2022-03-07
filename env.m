@@ -95,7 +95,7 @@ end
 function value = readfrominifile(key, folder)
     % get the value from an ".env" file
     value = '';
-    envFile = fullfile(folder, '.env');
+    envFile = fullfile(folder, 'keys.env');
     if not(exist(envFile, 'file'))
         parent = fileparts(folder);
         if strcmp(parent, folder)
