@@ -15,7 +15,7 @@ function config = bonsaiConfig
 
         % Local endpoint for exported brain prediction API
         % BRAINURL = http://localhost:5000/v1/prediction
-        config.exportedBrainUrl = env('BRAINURL');
+        config.exportedBrainUrl = env('BRAINURL', 'http://localhost:5000/v1/prediction');
     catch ME
         disp("Missing environment varibles. Copy template.env file to keys.env and add there.");
         disp("See the following link for details:");
