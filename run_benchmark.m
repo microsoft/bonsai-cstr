@@ -11,16 +11,12 @@
 clear; close all; clc; clearvars -global
 
 %% Set simulation configuration
-% Set noise
-noise = 5; % in percentage
-% Initialize model params
+bonsaiExportConnect
 init_vars 
 
 
 %% PI workspace setup
-
 open_system('CSTR_PI')
-%% 
 
 %% 1. Run Gain-scheduled PI with 0% noise
 
@@ -34,11 +30,9 @@ tout_PI = tout;
 %% 2. Run Gain-scheduled PI with noise
 
 % Percentage of noise to simulate
-noise_magnitude = noise/100;
-
-% Auxiliary params
-conc_noise = abs(CrEQ(1)-CrEQ(5))*noise_magnitude;
-temp_noise = abs(TrEQ(1)-TrEQ(5))*noise_magnitude;
+noise = 5
+conc_noise = abs(CrEQ(1)-CrEQ(5))*noise/100;
+temp_noise = abs(TrEQ(1)-TrEQ(5))*noise/100;
 
 % Run simulation
 sim('CSTR_PI')
@@ -53,17 +47,9 @@ tout_PI_noise = tout;
 mdl = 'CSTR_Bonsai';
 load_system(mdl);
 set_param(mdl, 'FastRestart', 'off');
-
 open_system('CSTR_Bonsai')
 
 %% 3. Run Brain with 0% noise noise
-
-% Percentage of noise to simulate
-noise_magnitude = 0/100;
-
-% Auxiliary params
-conc_noise = abs(CrEQ(1)-CrEQ(5))*noise_magnitude;
-temp_noise = abs(TrEQ(1)-TrEQ(5))*noise_magnitude;
 
 % Run simulation
 sim('CSTR_Bonsai');
@@ -75,11 +61,11 @@ simout_b = simout;
 %% 4. Run Brain with noise
 
 % Percentage of noise to include
-noise_magnitude = noise/100;
+noise = 5
 
 % Auxiliary params
-conc_noise = abs(CrEQ(1)-CrEQ(5))*noise_magnitude;
-temp_noise = abs(TrEQ(1)-TrEQ(5))*noise_magnitude;
+conc_noise = abs(CrEQ(1)-CrEQ(5))*noise/100;
+temp_noise = abs(TrEQ(1)-TrEQ(5))*noise/100;
 
 % Run simulation
 sim('CSTR_Bonsai');
