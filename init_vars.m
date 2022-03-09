@@ -2,7 +2,7 @@
 %% SET OF CONTROLLER VARIABLES
 
 % Load equilibrium points, used as initial conditions
-load('settings.mat')
+load('cstr_data.mat')
 
 % Scenario to be run - 5 scenarios: 1-based INT
 % > 1: Concentration transition -->  8.57 to 2.000 over [0, 0, 36, 45]

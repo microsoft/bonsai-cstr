@@ -20,7 +20,7 @@ BonsaiRunTraining(config, mdl, @episodeStartCallback);
 function episodeStartCallback(mdl, episodeConfig)
     in = Simulink.SimulationInput(mdl);
     in = in.setVariable('Cref_signal', episodeConfig.Cref_signal);
-    aux_data = load('equilibrium.mat');
+    aux_data = load('cstr_data.mat');
     noise_magnitude = episodeConfig.noise_percentage/100;
     in = in.setVariable('temp_noise', abs(aux_data.TrEQ(1)-aux_data.TrEQ(5))*noise_magnitude);
     in = in.setVariable('conc_noise', abs(aux_data.CrEQ(1)-aux_data.CrEQ(5))*noise_magnitude);
