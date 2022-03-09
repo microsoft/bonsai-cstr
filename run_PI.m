@@ -1,5 +1,5 @@
 %% Run the Chemical Process Optimization sample without Bonsai
-clear; close all; clc;
+clear; clc;
 
 %% Initialize Workspace 
 init_vars

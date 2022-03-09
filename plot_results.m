@@ -18,11 +18,9 @@ function [] = plot_results(tout, simout, scenario)
     grid, title('Reactor temperature'), ylabel('Tr')
 
     subplot(313)
-    plot(tout, simout(:, 5))
+    %plot(tout, simout(:, 5))
     hold on
     plot(tout, simout(:, 6))
-    % plot(tout, simout(:,7))
     hold off
-    legend('dTc', 'dTc rate limited','Tc')
-    grid, title('Coolant temperature'), ylabel('Kelvin')
+    grid, title('Change to Coolant Temp'), ylabel('Kelvin')
 end

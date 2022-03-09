@@ -6,7 +6,7 @@
 % 1: Using the exported Bonsai brain with 0% noise
 % 2: Using the exported Bonsai brain with noise (5% default)
 
-clear; close all; clc;
+clear;  clc;
 
 %% Initialize Workspace
 bonsaiExportConnect
