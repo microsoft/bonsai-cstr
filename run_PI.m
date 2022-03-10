@@ -18,10 +18,10 @@ sim('CSTR_PI')
 
 % Calculate metrics
 rms = sqrt(mean((simout(:, 1) - simout(:, 2)).^2));
-disp(['Benchmark: Target Concentration followed with RMS of: ', num2str(rms)])
+disp(['Gain Scheduled PI with 0% noise: Target Concentration followed with RMS of: ', num2str(rms)])
 
 rms = sqrt(mean((simout(:, 3) - simout(:, 4)).^2));
-disp(['Benchmark: Target Reactor Temperature followed with RMS of: ', num2str(rms)])
+disp(['Gain Scheduled PI with 0% noise: Target Reactor Temperature followed with RMS of: ', num2str(rms)])
 
 plot_results(tout, simout, 'Gain scheduled PI with 0% noise')
 
@@ -35,9 +35,9 @@ sim('CSTR_PI')
 
 % Calculate metrics
 rms = sqrt(mean((simout(:, 1) - simout(:, 2)).^2));
-disp(['Stretch Benchmark (5% noise): Target Concentration followed with RMS of: ', num2str(rms)])
+disp(['Gain Scheduled PI with 5% noise: Target Concentration followed with RMS of: ', num2str(rms)])
 
 rms = sqrt(mean((simout(:, 3) - simout(:, 4)).^2));
-disp(['Stretch Benchmark (5% noise): Target Reactor Temperature followed with RMS of: ', num2str(rms)])
+disp(['Gain Scheduled PI 5% noise: Target Reactor Temperature followed with RMS of: ', num2str(rms)])
 
 plot_results(tout, simout, ['Gain scheduled PI with ', num2str(noise), '% noise'])
