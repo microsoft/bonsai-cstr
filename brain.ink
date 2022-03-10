@@ -75,7 +75,7 @@ type SimConfig {
 simulator CSTRSimulator(Action: SimAction, Config: SimConfig): SimState {
     # Automatically launch the simulator with this registered package name.
 
-    # CSTR sim https://github.com/microsoft/bonsai-cstr SHA: 43c2339
+    # CSTR sim https://github.com/microsoft/bonsai-cstr SHA: 43f90d7
     package "CSTR"
 }
 
