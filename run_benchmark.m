@@ -30,7 +30,7 @@ tout_PI = tout;
 %% 2. Run Gain-scheduled PI with noise
 
 % Percentage of noise to simulate
-noise = 5
+noise = 5;
 conc_noise = abs(CrEQ(1)-CrEQ(5))*noise/100;
 temp_noise = abs(TrEQ(1)-TrEQ(5))*noise/100;
 
@@ -42,6 +42,8 @@ simout_PI_noise = simout;
 tout_PI_noise = tout;
 
 %% Brain Workspace Setup
+
+init_vars
 
 % load model and disable fast restart
 mdl = 'CSTR_Bonsai';
@@ -61,7 +63,7 @@ simout_b = simout;
 %% 4. Run Brain with noise
 
 % Percentage of noise to include
-noise = 5
+noise = 5;
 
 % Auxiliary params
 conc_noise = abs(CrEQ(1)-CrEQ(5))*noise/100;

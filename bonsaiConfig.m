@@ -24,7 +24,7 @@ function config = bonsaiConfig
     end
 
     % simulator name, for an unmanaged simulator launched from the desktop to show up on the web
-    config.name = "Simulink - Chemical Process";
+    config.name = "Simulink - CSTR";
 
     % set state and action schemas (overrides data from bonsaiBlock)
     config.stateSchema = ["Cr", "Tr", "Cref", "Tref", "Tc"];

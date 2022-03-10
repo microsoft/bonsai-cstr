@@ -5,7 +5,7 @@
 % run in 3 steps:
 %   1. run this script to configure an assessment session and set required variables
 %   2. open the model and click "Run"
-%   3. begin assessmnet in the web, selecting the "Simulink Chemical Plant" simulator.
+%   3. begin assessmnet in the web, selecting the "CSTR" simulator.
 
 % Initial data required for compilation should be initialized
 init_vars
@@ -14,6 +14,8 @@ init_vars
 mdl = 'CSTR_Bonsai';
 load_system(mdl);
 set_param(mdl, 'FastRestart', 'off');
+open_system(mdl);
+
 
 % configure assessment
 config = bonsaiConfig;
