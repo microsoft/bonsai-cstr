@@ -13,8 +13,9 @@
 # coolant circulating in the reactor's cooling jacket.
 
 # More details about the model are available at https://aka.ms/chemical-reactor-sample
+# The Simulink model is available at https://github.com/microsoft/bonsai-cstr
 
-# The Chemical Processing example is part of the Project Bonsai Simulink Toolbox
+# The similar Chemical Processing example is part of the Project Bonsai Simulink Toolbox
 # and can be downloaded from https://aka.ms/bonsai-toolbox
 
 inkling "2.0"
