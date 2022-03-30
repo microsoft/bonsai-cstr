@@ -1,0 +1,81 @@
+{
+  "name": "cstr_ai",
+  "timeout": 600,
+  "description": {
+    "config": {
+      "category": "Struct",
+      "fields": [
+        {
+          "name": "Cref_signal",
+          "type": {
+            "category": "Number",
+            "defaultValue": 0,
+            "comment": "Cref_signal"
+          }
+        },
+        {
+          "name": "noise_percentage",
+          "type": {
+            "category": "Number",
+            "defaultValue": 0,
+            "comment": "noise_percentage"
+          }
+        }
+      ]
+    },
+    "action": {
+      "category": "Struct",
+      "fields": [
+        {
+          "name": "Tc_adjust",
+          "type": {
+            "category": "Number",
+            "start": -10,
+            "stop": 10
+          }
+        }
+      ]
+    },
+    "state": {
+      "category": "Struct",
+      "fields": [
+	    {
+          "name": "Cr",
+          "type": {
+            "category": "Number",
+            "comment": "Reactor Output Residual Concentration: Real-time reactor read"
+          }
+        },
+        {
+          "name": "Tr",
+          "type": {
+            "category": "Number",
+            "comment": "Reactor Output Temperature: Real-time reactor read"
+          }
+        },
+        {
+          "name": "Cref",
+          "type": {
+            "category": "Number",
+            "comment": "Reactor Output Residual Concentration Reference: Target reference to follow"
+          }
+        },
+		{
+          "name": "Tref",
+          "type": {
+            "category": "Number",
+            "comment": "Temperature: Target reference to follow"
+          }
+        },
+		{
+          "name": "Tc",
+          "type": {
+            "category": "Number",
+            "comment": "Coolant absolute temperature as input to the simulation"
+          }
+        }
+		
+      ]
+    }
+  }
+}
