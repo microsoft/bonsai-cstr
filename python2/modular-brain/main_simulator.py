@@ -54,7 +54,9 @@ class CSTRSimulation():
         self.Cref = 8.5698
         self.Tref = 311.2612
 
-        self.constraint = None #simulator or ml or None
+        self.noise = 0.05
+
+        self.constraint = None #'ml' or None
 
         self.y = 0
 
@@ -65,7 +67,7 @@ class CSTRSimulation():
         self.reset()
 
     def step(self):
-        error_var = 0.05 #system noise %
+        error_var = self.noise #system noise %
         σ_max1 = error_var * (8.5698 - 2)
         σ_max2 = error_var * ( 373.1311 - 311.2612)
         
@@ -166,8 +168,8 @@ class CSTRSimulation():
     
 
 def main():
-    #df_train = pd.read_csv('cstr_simulator_data.csv')
-    df_train = pd.DataFrame()
+    df_train = pd.read_csv('cstr_simulator_data.csv')
+    #df_train = pd.DataFrame()
 
     cstr_sim = CSTRSimulation()
 
@@ -212,18 +214,24 @@ def main():
         
         cstr_sim.episode_step(cstr_sim.ΔTc)
         state = cstr_sim.get_state()
-        #generate dataframe
-        df_t['Ca'] = cstr_sim.Ca
-        df_t['T'] = cstr_sim.T
-        df_t['Tc'] = cstr_sim.Tc
-        df_t['dTc'] = cstr_sim.ΔTc
-        df_train = df_train.append(df_t)
-
-        
+    
         error = (cstr_sim.Ca - cstr_sim.Cref)**2
         Ca_error.append(error)
         error = (cstr_sim.T - cstr_sim.Tref)**2
         Tref_error.append(error)
+
+        #generate dataframe
+        df_t['date'] = pd.to_datetime('now')
+        df_t['sim_time'] = k
+        df_t['simulation'] = 0 #add simulation
+        df_t['Ca'] = cstr_sim.Ca
+        df_t['T'] = cstr_sim.T
+        df_t['Tref'] = cstr_sim.Tref
+        df_t['Cref'] = cstr_sim.Cref
+        df_t['Tc'] = cstr_sim.Tc
+        df_t['dTc'] = cstr_sim.ΔTc
+        df_t['noise'] = cstr_sim.noise
+        df_train = df_train.append(df_t)
         
         T_list.append(state['Tr'])
         Tc_list.append(state['Tc'])

@@ -125,8 +125,10 @@ for idx in range(0,sim_max):
         xdot[1] = dTdt
         return xdot
 
+    # time Interval (min)
+    time = 45 #simulation time (min)
+    t = np.linspace(0,time, time)
     
-
     # Store results for plotting
     Ca = np.ones(len(t)) * Ca_ss
     T = np.ones(len(t)) * T_ss
@@ -136,15 +138,13 @@ for idx in range(0,sim_max):
     u = np.ones(len(t)) * u_ss
 
     # Set points - reference
-    time = 45 #simulation time (min)
     p1 = 10 #time to start the transition
     p2 = 36 #time to finish the transition
 
     T_ = interpolate.interp1d([0,p1,p2,time,time+1], [311.2612,311.2612,373.1311,373.1311,373.1311])
     C = interpolate.interp1d([0,p1,p2,time, time+1], [8.57,8.57,2,2,2])
 
-    # time Interval (min)
-    t = np.linspace(0,time, time)
+    
 
     # Create plot
     if graphics == True:
