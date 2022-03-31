@@ -1,9 +1,18 @@
-# Continuous-stirred Tank Reactor (CSTR)
+# Continuous Stirred Tank Reactor (CSTR) sample
+
+> prefer active vs passive (passive adds cognitive noise)
+> one idea per sentence
+> no pronouns (this, that, you, we, rarely "it")
+> "you" best in side-bars "you might get an error if..."
+> no gender pronouns (he, she, they); prefer roles "the systems engineer"
+> avoid possessive (ESL)
+> avoid contractions (It's, hadn't)
+> avoid posessives (ESL, unique to English?) (Its)
 
 [Project Bonsai](https://aka.ms/bonsai) code sample demonstrating
-chemical process optimization in a continuously-stirred tank reactor
+chemical process optimization in a continuous stirred tank reactor
 (CSTR). Efficient control of an exothermic, non-linear chemical reaction
-with CSTR is a benchmark in which to compare PID, MPC and Bonsai brains.
+with a CSTR is a benchmark in which to compare PID, MPC and Bonsai brains.
 
 The chemical process here considers a transition from low to high
 conversion rate (high to low residual concentration). Because the
@@ -13,11 +22,8 @@ complicated by the fact that the process dynamics are nonlinear and
 transition from stable to unstable and back to stable as the conversion
 rate increases. The reactor dynamics are modeled in Simulink. The
 controlled variables (states) are the residual concentration  and the
-reactor temperature , and the manipulated variable (action) is the
+reactor temperature, and the manipulated variable (action) is the
 temperature of the coolant circulating in the reactor's cooling jacket.
-
-Comparison of Bonsai brain against adaptive PI controller with and
-without stochastic noise on sensors in [results.pdf](results.pdf)
 
 ![CSTR Schematic](img/cstr_diagram.jpg)
 
@@ -48,6 +54,9 @@ Final set for **Bonsai training**:
 - Performance improved when making the brain learn the per-timestep adjustment to apply to previous dTc.
 - Thus, we maintained control to be dTc_adjust, and added an accumulator on sim side.
 
+>> per-timestep?
+>> who is "we"
+
 | Action     | Continuous Value | Units        |
 | --------   | ------------     | ----------   |
 | dTc_adjust | [-5, 5]*         | [Kelvin/min] |
@@ -74,6 +83,8 @@ Which matches the set of Observable States used for **bonsai training**
 `Tref` was removed as observable state since brain to simplify brain's
 training. With Bonsai's solution we don't need `Tref` to be able to drive
 the concentration linearly from one point to the next.
+
+>> possessive
 
 
 ## Constraints
