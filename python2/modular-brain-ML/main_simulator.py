@@ -8,11 +8,6 @@ import pandas as pd
 import pickle
 import sys
 
-from bonsai_common import SimulatorSession, Schema
-#import dotenv
-from microsoft_bonsai_api.simulator.client import BonsaiClientConfig
-from microsoft_bonsai_api.simulator.generated.models import SimulatorInterface
-
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -63,7 +58,7 @@ class CSTRSimulation():
         if self.constraint == 'ml':
             self.ml_model = loaded_model = pickle.load(open('ml_predict_temperature.pkl', 'rb'))
 
-    def episode_start(self, config: Schema) -> None:
+    def episode_start(self) -> None:
         self.reset()
 
     def step(self):
@@ -153,23 +148,12 @@ class CSTRSimulation():
         else:
             return False
 
-    def get_interface(self) -> SimulatorInterface:
-        """Register sim interface."""
-
-        with open("interface.json", "r") as infile:
-            interface = json.load(infile)
-
-        return SimulatorInterface(
-            name=interface["name"],
-            timeout=interface["timeout"],
-            simulator_context=self.get_simulator_context(),
-            description=interface["description"],
-        )
-    
 
 def main():
-    df_train = pd.read_csv('cstr_simulator_data.csv')
-    #df_train = pd.DataFrame()
+    try:
+        df_train = pd.read_csv('cstr_simulator_data.csv')
+    except:
+        df_train = pd.DataFrame()
 
     cstr_sim = CSTRSimulation()
 

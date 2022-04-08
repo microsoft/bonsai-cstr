@@ -9,10 +9,6 @@ import pickle
 import sys
 import os
 
-from bonsai_common import SimulatorSession, Schema
-from microsoft_bonsai_api.simulator.client import BonsaiClientConfig
-from microsoft_bonsai_api.simulator.generated.models import SimulatorInterface
-
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -65,7 +61,7 @@ class CSTRSimulation():
         if self.constraint == 'ml':
             self.ml_model = loaded_model = pickle.load(open('ml_predict_temperature.pkl', 'rb'))
 
-    def episode_start(self, config: Schema) -> None:
+    def episode_start(self) -> None:
         self.reset()
 
     def step(self, k):
@@ -118,7 +114,7 @@ class CSTRSimulation():
         self.Ca = model.Ca + σ_Ca
 
         #Constraints - ML model to restrict action when a Thermal Runaway scenario is detected for next state
-        elif self.constraint == 'ml': 
+        if self.constraint == 'ml': 
             if y == 1 :
                 new_ΔTc = self.ΔTc
                 model2 = cstr.CSTRModel(T = self.T, Ca = self.Ca, Tc = self.Tc, ΔTc = new_ΔTc)
@@ -176,24 +172,13 @@ class CSTRSimulation():
             return True
         else:
             return False
-
-    def get_interface(self) -> SimulatorInterface:
-        """Register sim interface."""
-
-        with open("interface.json", "r") as infile:
-            interface = json.load(infile)
-
-        return SimulatorInterface(
-            name=interface["name"],
-            timeout=interface["timeout"],
-            simulator_context=self.get_simulator_context(),
-            description=interface["description"],
-        )
     
 
 def main():
-    #df_train = pd.read_csv('cstr_simulator_data.csv')
-    df_train = pd.DataFrame()
+    try:
+        df_train = pd.read_csv('cstr_simulator_data.csv')
+    except:
+        df_train = pd.DataFrame()
 
     cstr_sim = CSTRSimulation()
 
@@ -294,7 +279,7 @@ if __name__ == "__main__":
     Tref_l = []
     thermal_run_l = []
 
-    tmax = 100 #simulations
+    tmax = 10 #simulations
     for j in range(tmax):
         Ca_RMS,Tref_RMS,thermal_run_ = main()
         CA_l.append(Ca_RMS)

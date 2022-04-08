@@ -8,11 +8,6 @@ import pandas as pd
 import pickle
 import sys
 
-from bonsai_common import SimulatorSession, Schema
-#import dotenv
-from microsoft_bonsai_api.simulator.client import BonsaiClientConfig
-from microsoft_bonsai_api.simulator.generated.models import SimulatorInterface
-
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -36,7 +31,6 @@ class CSTRSimulation():
         Tc: float = 0,
         Cref: float = 0,
         Tref: float = 0,
-        constraint: str = None,
     ):
         """
         CSTR model for simulation.
@@ -54,16 +48,9 @@ class CSTRSimulation():
         self.Cref = 8.5698
         self.Tref = 311.2612
 
-        self.noise = 0.05
+        self.noise = 0.00
 
-        self.constraint = None #'ml' or None
-
-        self.y = 0
-
-        if self.constraint == 'ml':
-            self.ml_model = loaded_model = pickle.load(open('ml_predict_temperature.pkl', 'rb'))
-
-    def episode_start(self, config: Schema) -> None:
+    def episode_start(self) -> None:
         self.reset()
 
     def step(self):
@@ -77,13 +64,6 @@ class CSTRSimulation():
 
         #Tc
         y=0
-        self.y = 0
-        if self.constraint == 'ml' and self.T >= 340:
-            X = [[self.Ca, self.T,self.Tc,self.ΔTc]]
-            y = self.ml_model.predict(X)[0]
-            if self.ml_model.predict_proba(X)[0][1] >= 0.3:
-                y = 1
-                self.y = 1
 
         model = cstr.CSTRModel(T = self.T, Ca = self.Ca, Tc = self.Tc, ΔTc = self.ΔTc)
     
@@ -94,28 +74,7 @@ class CSTRSimulation():
         self.T = model.T + σ_T
 
         #Ca
-        self.Ca = model.Ca + σ_Ca
-
-        #Constraints - ML
-        if self.constraint == 'ml': 
-            if y == 1 :
-                new_ΔTc = self.ΔTc
-                model2 = cstr.CSTRModel(T = self.T, Ca = self.Ca, Tc = self.Tc, ΔTc = new_ΔTc)
-                while (new_ΔTc <= 10 and new_ΔTc >= -10):
-                    #reduce in 5%
-                    new_ΔTc -= 0.05 * abs(self.ΔTc) * np.sign(self.ΔTc)
-                    X = [[self.Ca, self.T ,self.Tc,new_ΔTc]]
-                    y = self.ml_model.predict(X)[0]
-                    if self.ml_model.predict_proba(X)[0][1] >= 0.3:
-                        y = 1
-                    if y == 0:
-                        model2.ΔTc = new_ΔTc
-                        model2.run_sim()
-                        break   
-                self.ΔTc = new_ΔTc
-                self.T = model2.T
-                self.Ca = model2.Ca
-            
+        self.Ca = model.Ca + σ_Ca            
         
 
     def episode_step(self,ΔTc ) -> None:
@@ -152,24 +111,13 @@ class CSTRSimulation():
             return True
         else:
             return False
-
-    def get_interface(self) -> SimulatorInterface:
-        """Register sim interface."""
-
-        with open("interface.json", "r") as infile:
-            interface = json.load(infile)
-
-        return SimulatorInterface(
-            name=interface["name"],
-            timeout=interface["timeout"],
-            simulator_context=self.get_simulator_context(),
-            description=interface["description"],
-        )
-    
+        
 
 def main():
-    df_train = pd.read_csv('cstr_simulator_data.csv')
-    #df_train = pd.DataFrame()
+    try:
+        df_train = pd.read_csv('cstr_simulator_data.csv')
+    except:
+        df_train = pd.DataFrame()
 
     cstr_sim = CSTRSimulation()
 
@@ -183,7 +131,6 @@ def main():
     Tref_list = []
     Ca_error = []
     Tref_error = []
-    ML_list = []
         
     time = 90 #45
     graphics = True
@@ -239,21 +186,11 @@ def main():
 
         if graphics:
             plt.clf()
-
-            if cstr_sim.y == 1:
-                ML_list.append(k/2)
                 
             plt.subplot(3,1,1)
             plt.plot([i/2 for i in range(len(Tc_list))],Tc_list,'k.-',lw=2)
             plt.ylabel('Cooling Tc (K)')
-            plt.legend(['Jacket Temperature'],loc='best')
-            for kx in ML_list:
-                plt.axvspan(kx, kx-1, facecolor='r',alpha=0.8, label='ML actuation')
-            lg = True
-            if len(ML_list) > 0 and lg == True:
-                plt.legend()
-                lg = False
-            
+            plt.legend(['Jacket Temperature'],loc='best')        
 
             plt.subplot(3,1,2)
             plt.plot([i/2 for i in range(len(Ca_list))],Ca_list,'b.-',lw=3)
