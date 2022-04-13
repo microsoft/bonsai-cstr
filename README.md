@@ -14,6 +14,8 @@ chemical process optimization in a continuous stirred tank reactor
 (CSTR). Efficient control of an exothermic, non-linear chemical reaction
 with a CSTR is a benchmark in which to compare PID, MPC and Bonsai brains.
 
+For an overview of this sample, watch [Chemical Reactor Optimization with Microsoft Project Bonsai](https://www.youtube.com/watch?v=mMhdItO21Bk).
+
 The chemical process here considers a transition from low to high
 conversion rate (high to low residual concentration). Because the
 chemical reaction is exothermic (produces heat), the reactor temperature
