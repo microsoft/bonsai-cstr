@@ -50,7 +50,8 @@ This section will show the steps to use the CSTR Python simulator in the Bonsai 
 ### 1.Build the Docker container with the Dockerfile
 
 ```shell
-docker build -t cstr_sim -f Dockerfile ./
+cd bonsai-training-interace
+docker build -t cstr_sim .
 ```
 
 Now you have two ways to run it via Bonsai Platform. 

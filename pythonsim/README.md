@@ -25,7 +25,7 @@ reactor temperature , and the manipulated variable (action) is the
 temperature of the coolant circulating in the reactor's cooling jacket.
 
 
-![CSTR Schematic](img/cstr_diagram.jpg)
+![CSTR Schematic](../img/cstr_diagram.jpg)
 
 This example shows how to use Project Bonsai's Machine Teaching
 strategies to learn a controller for a chemical reactor transitioning
@@ -50,6 +50,7 @@ This section will show the steps to use the CSTR Python simulator in the Bonsai 
 ### 1.Build the Docker container with the Dockerfile
 
 ```shell
+cd sim
 docker build -t cstr_sim -f Dockerfile ./
 ```
 
