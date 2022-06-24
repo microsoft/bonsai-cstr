@@ -1,0 +1,15 @@
+name: cstr-all
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.1
+  - casadi
+  - matplotlib
+  - numpy
+  - pandas
+  - scipy
+  - python-dotenv
+  - pip
+  - pip: 
+      - gekko
+      - do_mpc
