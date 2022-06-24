@@ -1,0 +1,10 @@
+name: cstr-sim
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.1
+  - matplotlib
+  - numpy
+  - pandas
+  - scipy
+  - python-dotenv
