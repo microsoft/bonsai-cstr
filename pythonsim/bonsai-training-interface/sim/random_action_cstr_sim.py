@@ -5,19 +5,13 @@ import ast
 from scipy import interpolate
 import math
 
-from bonsai_common import SimulatorSession, Schema
-import dotenv
-from microsoft_bonsai_api.simulator.client import BonsaiClientConfig
-from microsoft_bonsai_api.simulator.generated.models import SimulatorInterface
 
-from sim import cstr_model as cstr
+import cstr_model as cstr
 
 import numpy as np
 import sys
 
 import matplotlib.pyplot as plt
-
-import requests
 
 # time step (seconds) between state updates
 Δt = 1
@@ -64,10 +58,6 @@ class CSTRSimulation():
 
         
 
-
-    def episode_start(self, config: Schema) -> None:
-        #self.reset(config.get("Cref_signal") or 0,config.get("noise_percentage") or 0)
-        self.reset()
 
     def step(self, ΔTc: float):
         if self.Cref_signal == 0:
@@ -157,23 +147,9 @@ class CSTRSimulation():
         else:
             return False
 
-    def get_interface(self) -> SimulatorInterface:
-        """Register sim interface."""
-
-        with open("cstr_interface.json", "r") as infile:
-            interface = json.load(infile)
-
-        return SimulatorInterface(
-            name=interface["name"],
-            timeout=interface["timeout"],
-            simulator_context=self.get_simulator_context(),
-            description=interface["description"],
-        )
-
 def main():
 
     # values in `.env`, if they exist, take priority over environment variables
-    dotenv.load_dotenv(".env", override=True)
     cstr_sim = CSTRSimulation()
     cstr_sim.reset()
     state = cstr_sim.get_state()
