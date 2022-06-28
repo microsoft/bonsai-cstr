@@ -5,6 +5,7 @@ from gekko import GEKKO
 from scipy import interpolate
 import math
 import random
+import pandas as pd
 
 #initialize variables
 Ca_error = []
@@ -13,7 +14,7 @@ Cr_out = []
 Tr_out = []
 
 #simulation config
-sim_max = 1 # number of simulations
+sim_max = 3 # number of simulations
 error_var = 0.01 # error pct
 graphics = True # live graphics 
 display_mpc_vals = False
@@ -229,7 +230,25 @@ Ca_RMS = math.sqrt(np.average(Ca_error))
 Tref_RMS = math.sqrt(np.average(Tref_error))
 
 #print results
-print("Ca RMF: ", Ca_RMS , "+- ", np.std(Ca_error))
-print("Tr RMF: ", Tref_RMS, "+- ", np.std(Tref_error))
-print("Thermal Runaway: ", (np.sum(Cr_out)/sim_max)*100 , " %")
-print("Concentration Out: ", (np.sum(Tr_out)/sim_max)*100, " %" )
+print("Ca RMS: ", Ca_RMS , "+- ", np.std(Ca_error))
+print("Tr RMS: ", Tref_RMS, "+- ", np.std(Tref_error))
+print("Thermal Runaway: ", (np.sum(Tr_out)/sim_max)*100 , " %")
+print("Concentration Out: ", (np.sum(Cr_out)/sim_max)*100, " %" )
+
+#generate dataframe
+df_train = pd.read_csv(r'..\results-spec.csv')
+df_t = pd.DataFrame()
+df_t['date'] = [pd.to_datetime('now')]
+df_t['model'] = ['linear_mpc']
+df_t['runs'] = [sim_max]
+df_t['noise'] = [error_var]
+df_t['CaRMS_mu'] = [Ca_RMS]
+df_t['CaRMS_sigma'] = [np.std(Ca_error)]
+df_t['TrRMS_mu'] = [Tref_RMS]
+df_t['TrRMS_sigma'] = [np.std(Tref_error)]
+df_t['runaway_pct'] = [(np.sum(Tr_out)/sim_max)]
+
+df_train = df_train.append(df_t)
+
+df_train.to_csv(r'..\results-spec.csv', index=False)
+
