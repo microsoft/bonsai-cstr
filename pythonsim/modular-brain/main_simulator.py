@@ -117,7 +117,7 @@ class CSTRSimulation():
             return False
         
 
-def main(graphics):
+def main(graphics, noise):
     try:
         df_train = pd.read_csv('cstr_simulator_data.csv')
     except:
@@ -125,7 +125,7 @@ def main(graphics):
 
     cstr_sim = CSTRSimulation()
 
-    cstr_sim.reset(noise = 0.1)
+    cstr_sim.reset(noise = noise)
     state = cstr_sim.get_state()
     
     T_list = []
@@ -228,9 +228,10 @@ if __name__ == "__main__":
     CA_l = []
     Tref_l = []
     thermal_runs = []
+    noise = 0.05
     tmax = 100 #simulations
     for j in range(tmax):
-        Ca_RMS,Tref_RMS,thermal_run = main(False)
+        Ca_RMS,Tref_RMS,thermal_run = main(False, noise)
         CA_l.append(Ca_RMS)
         Tref_l.append(Tref_RMS)
         thermal_runs.append(thermal_run)
