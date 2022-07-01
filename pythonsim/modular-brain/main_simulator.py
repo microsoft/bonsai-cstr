@@ -216,8 +216,8 @@ def main(graphics, noise):
 
     Ca_RMS = math.sqrt(np.average(Ca_error))
     Tref_RMS = math.sqrt(np.average(Tref_error))
-    print("Ca RMF: ", Ca_RMS)
-    print("Tr RMF: ", Tref_RMS)
+    print("Ca RMS: ", Ca_RMS)
+    print("Tr RMS: ", Tref_RMS)
     
     df_train.to_csv('cstr_simulator_data.csv', index=False)
 
