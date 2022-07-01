@@ -24,14 +24,14 @@ on_spec_list = []
 off_spec_list = []
 Ca_RMF_list = []
 Tr_RMF_list = []
-thermal_run  = []
+thermal_run = []
 df_train = pd.DataFrame()
 #df_train = pd.read_csv('cstr_simulator_data.csv')
 
 # Config
-anim = False
+anim = True
 noise = 0.05 #pct of noise
-sim_total = 1 # total simulations
+sim_total = 3 # total simulations
 
 for idx in range(0,sim_total):
     #print(idx)
@@ -200,6 +200,9 @@ for idx in range(0,sim_total):
     Ca_error = []
     Tref_vals = []
     Tref_error = []
+    T_list = []
+    Tc_list = []
+    Ca_list = []
     u0_old = 0
     time = 90 #simulate 45 minutes with 0.5 minute step
     for k in range(time):
@@ -242,6 +245,16 @@ for idx in range(0,sim_total):
             df_t['dTc'] = df_['Tc'] - df_t['Tc0']
             df_train = df_train.append(df_t)
 
+        T_list.append(state_ops[0][1])
+        Tc_list.append(u0[0])
+        Ca_list.append(state_ops[0][0])
+
+        if state_ops[0][1] >= 400:
+            print("###########THERMAL RUNAWAY#####")
+            thermal_run.append(1)
+        else:
+            thermal_run.append(0)
+
         #Benchmark
         p1 = 22 # time to start transition
         p2 = 74 # time to end transition
@@ -273,9 +286,9 @@ for idx in range(0,sim_total):
 
     df_op = df_op.reset_index()
     df_op['dTc'] = df_op['Tc'].diff()
-    if df_op['T'].max() >= 400:
+    '''if df_op['T'].max() >= 400:
         print("###########THERMAL RUNAWAY#####")
-        thermal_run.append(1)
+        thermal_run.append(1)'''
 
     Ca_RMS = sqrt(np.average(Ca_error))
     Tref_RMS = sqrt(np.average(Tref_error))
@@ -283,52 +296,52 @@ for idx in range(0,sim_total):
     print("Tr RMF: ", Tref_RMS)
     Ca_RMF_list.append(Ca_RMS)
     Tr_RMF_list.append(Tref_RMS)
- 
-    if anim == True:
-        #Animation
-        mpc_graphics = do_mpc.graphics.Graphics(mpc.data)
         
-        rcParams['axes.grid'] = True
-        rcParams['font.size'] = 18
-        fig, ax = plt.subplots(3, sharex=True, figsize=(16,12))
-        # Configure plot:
-        mpc_graphics.add_line(var_type='_x', var_name='Ca', axis=ax[0])
-        mpc_graphics.add_line(var_type='_x', var_name='T', axis=ax[1])
-        mpc_graphics.add_line(var_type='_u', var_name='Tc', axis=ax[2])
-        mpc_graphics.add_line(var_type='_tvp', var_name='Caf', axis=ax[0])
-        ax[0].set_ylabel('Ca and Caf')
-        ax[1].set_ylabel('T')
-        ax[2].set_ylabel('Tc')
+    if anim == True:
+        plt.subplot(3,1,1)
+        plt.plot([i/2 for i in range(len(Tc_list))],Tc_list,'k.-',lw=2)
+        plt.ylabel('Cooling Tc (K)')
+        plt.legend(['Jacket Temperature'],loc='best')     
 
-        # Update properties for all prediction lines:
-        for line_i in mpc_graphics.pred_lines.full:
-            line_i.set_linewidth(2)
-        # Highlight nominal case:
-        for line_i in np.sum(mpc_graphics.pred_lines['_x', :, :,0]):
-            line_i.set_linewidth(5)
-        for line_i in np.sum(mpc_graphics.pred_lines['_u', :, :,0]):
-            line_i.set_linewidth(5)
+        plt.subplot(3,1,2)
+        plt.plot([i/2 for i in range(len(Ca_list))],Ca_list,'b.-',lw=3)
+        plt.plot([i/2 for i in range(len(Cref_vals))],Cref_vals,'k--',lw=2,label=r'$C_{sp}$')
+        plt.ylabel('Ca (mol/L)')
+        plt.legend(['Reactor Concentration','Concentration Setpoint'],loc='best')
 
-        def update(t_ind):
-            print('Writing frame: {}.'.format(t_ind), end='\r')
-            mpc_graphics.plot_results(t_ind=t_ind)
-            mpc_graphics.plot_predictions(t_ind=t_ind)
-            mpc_graphics.reset_axes()
-            lines = mpc_graphics.result_lines.full
-            return lines
+        plt.subplot(3,1,3)
+        plt.plot([i/2 for i in range(len(Tref_vals))],Tref_vals,'k--',lw=2,label=r'$T_{sp}$')
+        plt.plot([i/2 for i in range(len(T_list))],T_list,'b.-',lw=3,label=r'$T_{meas}$')
+        plt.plot([i/2 for i in range(len(T_list))],[400 for x in range(len(T_list))],'r--',lw=1)
+        plt.ylabel('T (K)')
+        plt.xlabel('Time (min)')
+        plt.legend(['Temperature Setpoint','Reactor Temperature'],loc='best')
 
-        n_steps = mpc.data['_time'].shape[0]
-
-        anim = FuncAnimation(fig, update, frames=n_steps, blit=True)
-
-        gif_writer = ImageMagickWriter(fps=5)
-        anim.save('anim_CSTR.gif', writer=gif_writer)
+        plt.show()
+        
 
 
-print("CaRMF mean: ", np.mean(Ca_RMF_list), "+- ", np.std(Ca_RMF_list))
-print("TRMF mean: ", np.mean(Tr_RMF_list), "+- ", np.std(Tr_RMF_list))
+print("CaRMS mean: ", np.mean(Ca_RMF_list), "+- ", np.std(Ca_RMF_list))
+print("TRMS mean: ", np.mean(Tr_RMF_list), "+- ", np.std(Tr_RMF_list))
 print("Total thermal runaway: ", (np.sum(thermal_run)/sim_total)*100, "%")
 
 df_train.to_csv('cstr_simulator_data.csv', index=False)
+
+#generate dataframe
+df_train = pd.read_csv(r'..\results-spec.csv')
+df_t = pd.DataFrame()
+df_t['date'] = [pd.to_datetime('now')]
+df_t['model'] = ['nonlinear_mpc']
+df_t['runs'] = [sim_total]
+df_t['noise'] = [noise]
+df_t['CaRMS_mu'] = [np.mean(Ca_RMF_list)]
+df_t['CaRMS_sigma'] = [np.std(Ca_RMF_list)]
+df_t['TrRMS_mu'] = [np.mean(Tr_RMF_list)]
+df_t['TrRMS_sigma'] = [np.std(Tr_RMF_list)]
+df_t['runaway_pct'] = [(np.sum(thermal_run)/len(thermal_run))]
+
+df_train = df_train.append(df_t)
+
+df_train.to_csv(r'..\results-spec.csv', index=False)
 
 

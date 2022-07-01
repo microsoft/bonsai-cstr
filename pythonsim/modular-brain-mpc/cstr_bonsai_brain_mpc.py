@@ -35,6 +35,7 @@ class CSTRSimulation():
         Cref: float = 0,
         Tref: float = 0,
         constraint: str = None,
+        noise: float = 0,
     ):
         """
         CSTR model for simulation.
@@ -58,6 +59,8 @@ class CSTRSimulation():
 
         self.thermal_run = []
 
+        self.noise = noise
+
         if self.constraint == 'ml':
             self.ml_model = loaded_model = pickle.load(open('ml_predict_temperature.pkl', 'rb'))
 
@@ -76,7 +79,7 @@ class CSTRSimulation():
         CrSP = C(k)
         TcSP = T_(k)
 
-        error_var = 0.05 #noise % into the system
+        error_var = self.noise #noise % into the system
         σ_max1 = error_var * (8.5698 - 2)
         σ_max2 = error_var * ( 373.1311 - 311.2612)
         
@@ -174,7 +177,7 @@ class CSTRSimulation():
             return False
     
 
-def main():
+def main(graphics, noise):
     try:
         df_train = pd.read_csv('cstr_simulator_data.csv')
     except:
@@ -182,7 +185,7 @@ def main():
 
     cstr_sim = CSTRSimulation()
 
-    cstr_sim.reset()
+    cstr_sim.reset(noise = noise)
     state = cstr_sim.get_state()
 
     T_list = []
@@ -193,7 +196,7 @@ def main():
     Ca_error = []
     Tref_error = []
     
-    graphics = True #Live graphics 
+    graphics = graphics #Live graphics 
     time = 90 #simulating 45 minutes with 0.5 min per step
     if graphics:
         plt.figure(figsize=(10,7))
@@ -266,8 +269,8 @@ def main():
 
     Ca_RMS = math.sqrt(np.average(Ca_error))
     Tref_RMS = math.sqrt(np.average(Tref_error))
-    print("Ca RMF: ", Ca_RMS)
-    print("Tr RMF: ", Tref_RMS)
+    print("Ca RMS: ", Ca_RMS)
+    print("Tr RMS: ", Tref_RMS)
 
     df_train.to_csv('cstr_simulator_data.csv', index=False)
 
@@ -278,10 +281,10 @@ if __name__ == "__main__":
     CA_l = []
     Tref_l = []
     thermal_run_l = []
-
+    noise = 0.05
     tmax = 10 #simulations
     for j in range(tmax):
-        Ca_RMS,Tref_RMS,thermal_run_ = main()
+        Ca_RMS,Tref_RMS,thermal_run_ = main(False, noise)
         CA_l.append(Ca_RMS)
         Tref_l.append(Tref_RMS)
         if np.sum(thermal_run_) > 0:
@@ -292,5 +295,22 @@ if __name__ == "__main__":
     print("CaRMF mean: ", np.mean(CA_l), "+- ", np.std(CA_l))
     print("TRMF mean: ", np.mean(Tref_l), "+- ", np.std(Tref_l))
     print("Thermal Runaway (%): ", np.sum(thermal_run_l)/tmax *100)
+
+    #generate dataframe
+    df_train = pd.read_csv(r'..\results-spec.csv')
+    df_t = pd.DataFrame()
+    df_t['date'] = [pd.to_datetime('now')]
+    df_t['model'] = ['bonsai_multi_brain_nonlinear_MPC']
+    df_t['runs'] = [tmax]
+    df_t['noise'] = [noise]
+    df_t['CaRMS_mu'] = [np.mean(CA_l)]
+    df_t['CaRMS_sigma'] = [np.std(CA_l)]
+    df_t['TrRMS_mu'] = [np.mean(Tref_l)]
+    df_t['TrRMS_sigma'] = [np.std(Tref_l)]
+    df_t['runaway_pct'] = [np.sum(thermal_run_l)/tmax]
+
+    df_train = df_train.append(df_t)
+
+    df_train.to_csv(r'..\results-spec.csv', index=False)
 
 
