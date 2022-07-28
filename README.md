@@ -1,14 +1,5 @@
 # Continuous Stirred Tank Reactor (CSTR) sample
 
-> prefer active vs passive (passive adds cognitive noise)
-> one idea per sentence
-> no pronouns (this, that, you, we, rarely "it")
-> "you" best in side-bars "you might get an error if..."
-> no gender pronouns (he, she, they); prefer roles "the systems engineer"
-> avoid possessive (ESL)
-> avoid contractions (It's, hadn't)
-> avoid posessives (ESL, unique to English?) (Its)
-
 [Project Bonsai](https://aka.ms/bonsai) code sample demonstrating
 chemical process optimization in a continuous stirred tank reactor
 (CSTR). Efficient control of an exothermic, non-linear chemical reaction
