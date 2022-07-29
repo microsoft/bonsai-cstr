@@ -44,19 +44,16 @@ Bare minimum for the sim (all units are continuous):
 
 Final set for **Bonsai training**:
 
-- Performance improved when making the brain learn the per-timestep adjustment to apply to previous dTc.
-- Thus, we maintained control to be dTc_adjust, and added an accumulator on sim side.
-
->> per-timestep?
->> who is "we"
+> Note: Performance improved when making the brain learn the per-timestep adjustment to apply to previous dTc.
+> Control is maintained with the addition of `dTc_adjust`, and an accumulator was added on the simulator side.
 
 | Action     | Continuous Value | Units        |
 | --------   | ------------     | ----------   |
 | dTc_adjust | [-5, 5]*         | [Kelvin/min] |
 
-*Note, given an additional rule that requires keeping dTc changes at no
-more than 10 Kelvins/min, we forced dTc_adjust to be on the [-5, 5]
-range (for Ts=0.5min)
+> Note: given an additional rule that requires keeping dTc changes at no
+> more than 10 Kelvins/min, we forced dTc_adjust to be on the [-5, 5]
+> range (for Ts=0.5min)
 
 ## States (Control Variables)
 
@@ -69,16 +66,13 @@ Which matches the set of Observable States used for **bonsai training**
 | Tc    | [10, 800]        | [Kelvin]  |
 | Cref  | [0.1, 12]        | [kmol/m3] |
 
-> Note, .ink file defines ranges higher than the ones shown here. That
-> is made in purpose since the brain will try to explore, and thus will
+> Note, the .ink file defines ranges higher than the ones shown here. That
+> is made on purpose since the brain will try to explore, and thus will
 > hit extreme limits in doing so.
 
-`Tref` was removed as observable state since brain to simplify brain's
-training. With Bonsai's solution we don't need `Tref` to be able to drive
-the concentration linearly from one point to the next.
-
->> possessive
-
+`Tref` was removed as observable state since brain to simplify brain
+training. With Bonsai's solution, `Tref` is not needed to be able to drive
+the concentration linearly between points.
 
 ## Constraints
 
