@@ -48,7 +48,7 @@ class CSTRSimulation():
         self.Cref = 8.5698
         self.Tref = 311.2612
 
-        self.noise = 0.00
+        self.noise = 0.02
 
     def episode_start(self) -> None:
         self.reset()
@@ -223,11 +223,13 @@ def main():
 if __name__ == "__main__":
     CA_l = []
     Tref_l = []
-    tmax = 1 #simulations
+    tmax = 3 #simulations
     for j in range(tmax):
         Ca_RMS,Tref_RMS = main()
         CA_l.append(Ca_RMS)
         Tref_l.append(Tref_RMS)
+        print(f"{j} run finished...press ENTER for next run...")
+        input("")
 
     print("CaRMF mean: ", np.mean(CA_l), "+- ", np.std(CA_l))
     print("TRMF mean: ", np.mean(Tref_l), "+- ", np.std(Tref_l))

@@ -32,7 +32,6 @@ class CSTRSimulation():
         Cref: float = 0,
         Tref: float = 0,
         constraint: str = None,
-        noise: float = 0,
     ):
         """
         CSTR model for simulation.
@@ -50,15 +49,14 @@ class CSTRSimulation():
         self.Cref = 8.5698
         self.Tref = 311.2612
 
-        self.noise = noise
+        self.noise = 0.05
 
         self.constraint = 'ml' #simulator or ml or None
 
         self.y = 0
-        self.thermal_run = 0
 
         if self.constraint == 'ml':
-            self.ml_model = loaded_model = pickle.load(opn('ml_predict_temperature.pkl', 'rb'))
+            self.ml_model = loaded_model = pickle.load(open('ml_predict_temperature.pkl', 'rb'))
 
     def episode_start(self) -> None:
         self.reset()
@@ -78,7 +76,6 @@ class CSTRSimulation():
         if self.constraint == 'ml' and self.T >= 340:
             X = [[self.Ca, self.T,self.Tc,self.ΔTc]]
             y = self.ml_model.predict(X)[0]
-            #print(self.ml_model.predict_proba(X))
             if self.ml_model.predict_proba(X)[0][1] >= 0.3:
                 y = 1
                 self.y = 1
@@ -97,12 +94,11 @@ class CSTRSimulation():
         #Constraints - ML
         if self.constraint == 'ml': 
             if y == 1 :
-                print('ML action')
                 new_ΔTc = self.ΔTc
                 model2 = cstr.CSTRModel(T = self.T, Ca = self.Ca, Tc = self.Tc, ΔTc = new_ΔTc)
                 while (new_ΔTc <= 10 and new_ΔTc >= -10):
-                    #reduce in 10%
-                    new_ΔTc -= 0.1 * abs(self.ΔTc) * np.sign(self.ΔTc)
+                    #reduce in 5%
+                    new_ΔTc -= 0.05 * abs(self.ΔTc) * np.sign(self.ΔTc)
                     X = [[self.Ca, self.T ,self.Tc,new_ΔTc]]
                     y = self.ml_model.predict(X)[0]
                     if self.ml_model.predict_proba(X)[0][1] >= 0.3:
@@ -142,7 +138,6 @@ class CSTRSimulation():
     def halted(self) -> bool:
         if self.T >= 400:
             print("#### THERMAL RUNAWAY !! ###")
-            self.thermal_run = 1
             return True
         elif self.Ca < 0:
             print("#### CONCENTRATION BELOW ZERO !! ###")
@@ -154,7 +149,7 @@ class CSTRSimulation():
             return False
 
 
-def main(graphics, noise):
+def main():
     try:
         df_train = pd.read_csv('cstr_simulator_data.csv')
     except:
@@ -162,7 +157,7 @@ def main(graphics, noise):
 
     cstr_sim = CSTRSimulation()
 
-    cstr_sim.reset(noise=noise)
+    cstr_sim.reset()
     state = cstr_sim.get_state()
     
     T_list = []
@@ -175,7 +170,7 @@ def main(graphics, noise):
     ML_list = []
         
     time = 90 #45
-    graphics = graphics
+    graphics = True
     if graphics:
         plt.figure(figsize=(10,7))
         plt.ion()
@@ -269,38 +264,19 @@ def main(graphics, noise):
     
     df_train.to_csv('cstr_simulator_data.csv', index=False)
 
-    return Ca_RMS,Tref_RMS,cstr_sim.thermal_run
+    return Ca_RMS,Tref_RMS
 
 
 if __name__ == "__main__":
     CA_l = []
     Tref_l = []
-    thermal_runs = []
-    tmax = 10 #simulations
-    noise = 0.1
+    tmax = 1 #simulations
     for j in range(tmax):
-        Ca_RMS,Tref_RMS,thermal_run = main(False, noise=noise)
+        Ca_RMS,Tref_RMS = main()
         CA_l.append(Ca_RMS)
         Tref_l.append(Tref_RMS)
-        thermal_runs.append(thermal_run)
 
-    print("CaRMS mean: ", np.mean(CA_l), "+- ", np.std(CA_l))
-    print("TrRMS mean: ", np.mean(Tref_l), "+- ", np.std(Tref_l))
-    print("Thermal Runaways: ", (np.sum(thermal_runs)/len(thermal_runs))*100, ' %')
+    print("CaRMF mean: ", np.mean(CA_l), "+- ", np.std(CA_l))
+    print("TRMF mean: ", np.mean(Tref_l), "+- ", np.std(Tref_l))
 
-    #generate dataframe
-    df_train = pd.read_csv(r'..\results-spec.csv')
-    df_t = pd.DataFrame()
-    df_t['date'] = [pd.to_datetime('now')]
-    df_t['model'] = ['bonsai_multi_brain_ML']
-    df_t['runs'] = [tmax]
-    df_t['noise'] = [noise]
-    df_t['CaRMS_mu'] = [np.mean(CA_l)]
-    df_t['CaRMS_sigma'] = [np.std(CA_l)]
-    df_t['TrRMS_mu'] = [np.mean(Tref_l)]
-    df_t['TrRMS_sigma'] = [np.std(Tref_l)]
-    df_t['runaway_pct'] = [(np.sum(thermal_runs)/len(thermal_runs))]
 
-    df_train = df_train.append(df_t)
-
-    df_train.to_csv(r'..\results-spec.csv', index=False)

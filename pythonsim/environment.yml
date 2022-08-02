@@ -10,6 +10,8 @@ dependencies:
   - scipy
   - python-dotenv
   - pip
+  - scikit-learn
   - pip: 
       - gekko
       - do_mpc
+      - requests
