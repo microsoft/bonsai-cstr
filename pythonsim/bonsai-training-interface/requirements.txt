@@ -1,0 +1,7 @@
+microsoft-bonsai-api
+matplotlib
+numpy
+pandas
+scipy
+python-dotenv
+dataclasses
