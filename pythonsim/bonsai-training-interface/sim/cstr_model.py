@@ -31,48 +31,11 @@ class CSTRModel:
     Tf: float = 298.2 #K
 
     def __post_init__(self):
+        """""
+        By default, resolve the ODE right after the object is generated.
+        """""
+        self.run_sim()
 
-        #self.ΔT =  (self.F/self.V *(self.Tf-self.T)) - ((self.ΔH/self.phoCp)*(self.k0 * exp(-self.E/(self.R*self.T))*self.Ca)) - ((self.UA /(self.phoCp*self.V)) *(self.T-self.Tc))
-        #self.T += self.ΔT
-
-        #self.ΔCa = (self.F/self.V * (self.Cafin - self.Ca)) - (self.k0 * exp(-self.E/(self.R*self.T))*self.Ca)
-
-        def model(z, t, u):
-            x = z[0]
-            y = z[1]
-            dxdt = (self.F/self.V * (self.Cafin - x)) - (self.k0 * exp(-self.E/(self.R*y))*x)
-            dydt =  (self.F/self.V *(self.Tf-y)) - ((self.ΔH/self.phoCp)*(self.k0 * exp(-self.E/(self.R*y))*x)) - ((self.UA /(self.phoCp*self.V)) *(y - self.Tc + u))
-
-            dzdt = [dxdt,dydt]
-            return dzdt
-
-        #initial cond
-        z0 = [self.Ca, self.T]
-        n = 3 #3 4
-        t = np.linspace(0,1,n)
-        #input
-        #u = [0,self.ΔTc]
-        u = np.zeros(n)
-        u[0] = self.ΔTc #-1 0
-
-        #solution
-        x = np.empty_like(t)
-        y = np.empty_like(t)
-
-        x[0] = z0[0]
-        y[0] = z0[1]
-
-        #solve ODE
-        for i in range(1,n):
-            tspan = [t[i-1], t[i]]
-            z = odeint(model, z0, tspan, args=(u[i],))
-            x[i] = z[1][0]
-            y[i] = z[1][1]
-            z0 = z[1]
-            
-        self.Ca = x[1]
-        self.T = y[1]
-        self.Tc += self.ΔTc
 
     def run_sim(self):
 
