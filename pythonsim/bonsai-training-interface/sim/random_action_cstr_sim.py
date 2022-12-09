@@ -174,17 +174,19 @@ class CSTRSimulation():
         }
 
     def halted(self) -> bool:
-        if self.T >= 400:
-            print("#### THERMAL RUNAWAY !! ###")
-            return True
-        elif self.Ca < 0:
-            print("#### CONCENTRATION BELOW ZERO !! ###")
-            return True
+        try:
+            if self.Tr >= thermal_runaway:
+                raise ValueError("#### REACTOR HAS REACHED THERMAL RUNAWAY !! The simulation is forced to restart. ###")
+            elif self.Cr <= 0:
+                raise ValueError("#### REACTOR CONCENTRATION IS BELOW ZERO !! The simulation is forced to restart. ###")
             elif self.ΔTc > 10 or self.ΔTc < -10 :
-            print("#### PHYSICAL LIMITATION REACHED FOR DTc !! ###")
-            return True
+                raise ValueError("#### PHYSICAL LIMITATION REACHED FOR DTc !! ###")
             else:
                 return False
+        except Exception:
+            print(traceback.format_exc())
+            print("Sim needs to be reset to continue training.")
+            return True
 
 def main():
 
