@@ -20,7 +20,7 @@ from microsoft_bonsai_api.simulator.generated.models import (
     SimulatorInterface, SimulatorState)
 
 
-from sim import cstr_model as cstr
+from sim.cstr_solver import CSTR_Solver as CSTR_Solver
 
 import numpy as np
 import sys
@@ -187,16 +187,16 @@ class CSTRSimulation:
         mu = 0
 
         #calling the CSTR python model
-        model = cstr.CSTRModel(T = self.T, Ca = self.Ca, Tc = self.Tc, ΔTc = self.ΔTc)
+        model = CSTR_Solver(Tr = self.T, Cr = self.Ca, Tc = self.Tc, ΔTc = self.ΔTc)
 
         #Tc
         self.Tc += self.ΔTc
 
         #Tr
-        self.T = model.T + σ_T
+        self.T = model.Tr + σ_T
 
         #Ca
-        self.Ca = model.Ca + σ_Ca
+        self.Ca = model.Cr + σ_Ca
 
         #Increase time
         self.cnt += 1

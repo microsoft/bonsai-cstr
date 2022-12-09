@@ -7,7 +7,7 @@ from scipy import interpolate
 import math
 
 
-from cstr_model import CSTR_Solver as CSTR_Solver
+from cstr_solver import CSTR_Solver as CSTR_Solver
 
 import numpy as np
 import sys
