@@ -98,7 +98,7 @@ class CSTR_Solver:
         # Calculate temperature derivative
         dydt = (self.F/self.V *(self.Tf-y)) \
                - ((self.ΔH/self.phoCp)*rA) \
-               - ((self.UA /(self.phoCp*self.V)) * (y - self.Tc + u))
+               - ((self.UA /(self.phoCp*self.V)) * (y - (self.Tc + u)))
 
         dzdt = [dxdt,dydt]
         return dzdt
