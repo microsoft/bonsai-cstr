@@ -5,7 +5,7 @@ import random
 import ast
 from scipy import interpolate
 import math
-
+from typing import Dict, Any, Union
 
 from cstr_solver import CSTR_Solver as CSTR_Solver
 
@@ -13,6 +13,8 @@ import numpy as np
 import sys
 
 import matplotlib.pyplot as plt
+
+from sim.log_feature import SimLogger
 
 # time step (seconds) between state updates
 Δt_sim = 1
@@ -25,6 +27,33 @@ Tr_eq = [311.2612, 327.9968, 341.1084, 354.7246, 373.1311]
 Tc_eq = [292, 292, 292, 292, 292]
 
 class CSTRSimulation():
+    def __init__(
+        self,
+        render: bool = False,
+        log_data: Union[bool, str] = False,
+        debug: bool = True,
+    ):
+        """CSTR simulation using a python solver.
+
+        Parameters
+        ----------
+        render : bool, optional
+            # TODO: Add render functionality as a method to this class.
+            render every control timestep of the environment, by default False
+        log_data : bool/str, optional
+            whether to MDP data to CSV, by default False.
+            If str is provided, CSV name generation will use tag for unique identification.
+        debug : bool, optional
+            debugging functionality for in-depth debugging when requested.
+        """
+        
+        self.render = render
+        self.debug = debug
+
+        # Logging features
+        self.log_data = log_data
+        self.sim_logger = SimLogger(log_data=self.log_data)
+
     def reset(
         self,
         Cref_signal: float = 3,
@@ -41,8 +70,11 @@ class CSTRSimulation():
         cnt: float = 0
     ):
         """
-        CSTR model for simulation.
+        Initialize a new episode of the simulator with configuration parameters.
+        # TODO: Modify config to be a dictionary, instead of a set of independent arguments.
 
+        Parameters
+        ----------
         Cref_signal: Reference Cref & Tref to be followed by our control.
           Values that Cref_signal can take:
             (0) N/A  ---> STATIC: Cref == Tref == 0.
@@ -51,6 +83,12 @@ class CSTRSimulation():
             (3) STEADY STATE: (Cref, Tref) sustained at (8.57, 311.3).
             (4) Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1), from its 22 to 74.
         """
+
+        # Update episode number, and restart iteration count.
+        if self.log_data:
+            self.sim_logger.new_episode()
+
+
         # Default initial conditions
         Ca0: float = 8.5698     #kmol/m3
         T0: float = 311.2639    #K
@@ -116,6 +154,22 @@ class CSTRSimulation():
 
 
     def step(self, ΔTc: float):
+        """Step through the environment.
+
+        Parameters
+        ----------
+        # TODO: Modify action to be a dictionary, instead of ΔTc.
+        action : Dict[str, Any]
+            Control/action to iterate in the environment
+        """
+
+        # Log iterations at every episode step.
+        if self.log_data:
+            self.sim_logger.log_iterations(state=self.get_state(),
+                                           action={"Tc_adjust": ΔTc},
+                                           config=self.config)
+
+
         # Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1).
         if self.Cref_signal == 1 \
             or self.Cref_signal == 4:
@@ -185,8 +239,9 @@ class CSTRSimulation():
                 return False
         except Exception:
             print(traceback.format_exc())
-            print("Sim needs to be reset to continue training.")
+            print("Execution continues, sim needs to be reset to continue running.")
             return True
+
 
 def main():
 
