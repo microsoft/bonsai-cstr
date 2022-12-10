@@ -30,8 +30,8 @@ class CSTR_Solver:
     ΔH: float = -5960   # Heat of reaction per mole kcal/kmol
     phoCp: float = 500  # Density multiplied by heat capacity (kcal/(m3·K))
     UA: float = 150     # Overall heat transfer coefficient multiplied by tank area (kcal/(K·h))
-    Cafin: float = 10   # kmol/m3
-    Tf: float = 298.2   # K
+    Cafin: float = 10   # Feed Concentration (kmol/m^3)
+    Tf: float = 298.2   # Feed Temperature (K)
 
 
     def __post_init__(self):
@@ -87,12 +87,18 @@ class CSTR_Solver:
         """""
         Method that resolves the ODE (ordinary differential equation).
         """""
-        x = z[0]
-        y = z[1]
-        dxdt = (self.F/self.V * (self.Cafin - x)) - (self.k0 * exp(-self.E/(self.R*y))*x)
-        dydt =  (self.F/self.V *(self.Tf-y)) - \
-                ((self.ΔH/self.phoCp)*(self.k0 * exp(-self.E/(self.R*y))*x)) - \
-                ((self.UA /(self.phoCp*self.V)) * (y - self.Tc + u))
+        x = z[0]  # Reactor Concentrarion
+        y = z[1]  # Reactor Temperature
+        
+        # reaction rate
+        rA = self.k0 * exp(-self.E/(self.R*y))*x
+
+        # Calculate concentration derivative
+        dxdt = (self.F/self.V * (self.Cafin - x)) - rA
+        # Calculate temperature derivative
+        dydt = (self.F/self.V *(self.Tf-y)) \
+               - ((self.ΔH/self.phoCp)*rA) \
+               - ((self.UA /(self.phoCp*self.V)) * (y - self.Tc + u))
 
         dzdt = [dxdt,dydt]
         return dzdt
