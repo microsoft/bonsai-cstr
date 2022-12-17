@@ -260,8 +260,8 @@ class CSTRSimulation():
         self.Tr_no_noise = model.Tr     # Temperature of the reactor's output, clean (without noise introduced).
         self.Cr_no_noise = model.Cr     # Concentration of the reactor's output, clean (without noise introduced).
         # Add noise for inputs to be read by the brain, or selected control.
-        self.Tr = model.Tr_no_noise + Tr_error   # Tr - Temperature of the reactor's output.
-        self.Cr = model.Cr_no_noise + Cr_error   # Cr - Concentration of the reactor's output.
+        self.Tr = self.Tr_no_noise + Tr_error   # Tr - Temperature of the reactor's output.
+        self.Cr = self.Cr_no_noise + Cr_error   # Cr - Concentration of the reactor's output.
 
         # Increase the current iteration time by the stepping time.
         self.it_time += self.step_time
