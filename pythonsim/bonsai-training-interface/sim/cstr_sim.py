@@ -180,20 +180,21 @@ class CSTRSimulation():
         
 
 
-    def step(self, ΔTc: float):
+    def step(self, action: Dict[str, Any]):
         """Step through the environment.
 
         Parameters
         ----------
-        # TODO: Modify action to be a dictionary, instead of ΔTc.
         action : Dict[str, Any]
             Control/action to iterate in the environment
         """
 
+        Tc_adjust = float(action["Tc_adjust"])
+
         # Log iterations at every episode step.
         if self.log_data:
             self.sim_logger.log_iterations(state=self.get_state(),
-                                           action={"Tc_adjust": ΔTc},
+                                           action=action,
                                            config=self.config)
 
 
@@ -218,7 +219,7 @@ class CSTRSimulation():
             self.Tref = float(T_sched(k))
         
         # Update the latest stored  action received.
-        self.ΔTc = ΔTc
+        self.ΔTc = Tc_adjust
         
         # Define step to introduce to states based on noise_percentage.
         C_max_range = (8.5698 - 2)
@@ -228,7 +229,12 @@ class CSTRSimulation():
         Tr_error = error_var * random.uniform(-T_max_range, T_max_range)
 
         # Call the CSTR solver.
-        model = CSTR_Solver(Tr = self.Tr, Cr = self.Cr, Tc = self.Tc, ΔTc = self.ΔTc)
+        model = CSTR_Solver(Tr = self.Tr,
+                            Cr = self.Cr,
+                            Tc = self.Tc,
+                            ΔTc = self.ΔTc,
+                            step_time = self.step_time,
+                            edo_solver_n_its = self.edo_solver_n_its)
 
         # EXTRACT UPDATED VALUES FROM SOLVER.    
         #self.Tc += self.ΔTc

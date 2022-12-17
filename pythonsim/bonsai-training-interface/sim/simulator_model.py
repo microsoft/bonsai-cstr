@@ -42,12 +42,11 @@ class SimulatorModel:
 
         return self.sim.get_state()                        
 
+
     def step(self, action) -> Dict[str, Any]:
         """ Apply the specified action and perform one simulation step. """
         # Apply action to sim.
-        # TODO: Modify to pass the dict directly.
-        Tc_adjust = action["Tc_adjust"]
-        self.sim.step(Tc_adjust)
+        self.sim.step(action=action)
 
         # If 'sim_halted' is set to True, that indicates that the simulator is unable to continue and
         # the episode will be discarded. This simulator sets it to False because it can always continue.
