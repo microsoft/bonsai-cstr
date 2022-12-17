@@ -85,7 +85,7 @@ class CSTRSimulation():
             (2) STEADY STATE: (Cref, Tref) sustained at (2, 373.1).
             (3) STEADY STATE: (Cref, Tref) sustained at (8.57, 311.3).
             (4) Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1), from its 22 to 74.
-
+        
         noise_percentage: Noise value to apply to states/actions.
             int[0, 1]
 
@@ -142,7 +142,7 @@ class CSTRSimulation():
         self.max_trans_time = max_simulation_time
         # Initialize current simulation time.
         self.it_time = 0
-        
+
 
         ## INITIALIZE ENVIRONMENT VARIABLES BASED ON VALUE OF Cref_signal.
 
@@ -184,7 +184,18 @@ class CSTRSimulation():
             self.Cref = self.Cr
             self.Tref = self.Tr
 
-        
+        # Define step to introduce to states based on noise_percentage.
+        C_max_range = (8.5698 - 2)
+        T_max_range = ( 373.1311 - 311.2612)
+        error_var = self.noise_percentage
+        Cr_error = error_var * random.uniform(-C_max_range, C_max_range)
+        Tr_error = error_var * random.uniform(-T_max_range, T_max_range)
+
+        self.Tr_no_noise = self.Tr     # Temperature of the reactor's output, clean (without noise introduced).
+        self.Cr_no_noise = self.Cr     # Concentration of the reactor's output, clean (without noise introduced).
+        # Add noise for inputs to be read by the brain, or selected control.
+        self.Tr += Tr_error     # Tr - Temperature of the reactor's output.
+        self.Cr += Cr_error     # Cr - Concentration of the reactor's output.
 
 
     def step(self, action: Dict[str, Any]):
@@ -246,8 +257,11 @@ class CSTRSimulation():
         # EXTRACT UPDATED VALUES FROM SOLVER.    
         #self.Tc += self.ΔTc
         self.Tc = model.Tc              # Tc - Temperature of the coolant.
-        self.Tr = model.Tr + Tr_error   # Tr - Temperature of the reactor's output.
-        self.Cr = model.Cr + Cr_error   # Cr - Concentration of the reactor's output.
+        self.Tr_no_noise = model.Tr     # Temperature of the reactor's output, clean (without noise introduced).
+        self.Cr_no_noise = model.Cr     # Concentration of the reactor's output, clean (without noise introduced).
+        # Add noise for inputs to be read by the brain, or selected control.
+        self.Tr = model.Tr_no_noise + Tr_error   # Tr - Temperature of the reactor's output.
+        self.Cr = model.Cr_no_noise + Cr_error   # Cr - Concentration of the reactor's output.
 
         # Increase the current iteration time by the stepping time.
         self.it_time += self.step_time
@@ -258,10 +272,11 @@ class CSTRSimulation():
         
 
     def get_state(self):
-        # TODO: Add variables WITHOUT noise to be able to compute real error for control analysis & brain reward.
         return {
-            "Cr": self.Cr,      # Concentration at the reactor's output (kmol/m3).
-            "Tr": self.Tr,      # Temperature at the reactor's output (Kelvin).
+            "Cr_no_noise": self.Cr_no_noise,      # Concentration at the reactor's output, without any noise introduced (kmol/m3).
+            "Tr_no_noise": self.Tr_no_noise,      # Temperature at the reactor's output, without any noise introduced (Kelvin).
+            "Cr": self.Cr,         # Concentration at the reactor's output (kmol/m3).
+            "Tr": self.Tr,         # Temperature at the reactor's output (Kelvin).
             "Tc": self.Tc,      # Temperature of the coolant (Kelvin).
             "Cref": self.Cref,  # Reference concentration desired by the operators at reactor's output (kmol/m3).
             "Tref": self.Tref,  # Reference temperature desired by the operators at reactor's output (Kelvin).
