@@ -19,6 +19,8 @@ from sim.log_feature import SimLogger
 # time step (seconds) between state updates
 Δt_sim = 1
 thermal_runaway = 400
+        # Max considered transition time (the simulation cannot run further).
+max_simulation_time = 1000
 
 # Known equilibrion relationships for concentration and temperature
 Cr_eq = [8.57, 6.9275, 5.2850, 3.6425, 2]
@@ -90,6 +92,9 @@ class CSTRSimulation():
         step_time: Step time in between actions.
             float(0.5, 1, 1.5)
 
+        transition_start: Time (in seconds) at which transition will start.
+            int[0, 45]
+
         edo_solver_n_its: n iterations to resolve Ordinary Differential Equation.
             float(0.5, 1, 1.5)
         """
@@ -98,6 +103,7 @@ class CSTRSimulation():
         self.Cref_signal: float = 4
         self.noise_percentage: float = 0
         self.step_time: float = Δt_sim
+        self.transition_start: float = 11
         self.edo_solver_n_its: int = 2
 
         # Config vars received
@@ -108,8 +114,11 @@ class CSTRSimulation():
             self.noise_percentage = config["noise_percentage"]
         if "step_time" in config.keys():
             self.step_time = config["step_time"]
+        if "transition_start" in config.keys():
+            self.transition_start = config["transition_start"]
         if "edo_solver_n_its" in config.keys():
             self.edo_solver_n_its = config["edo_solver_n_its"]
+
 
         # Update episode number, and restart iteration count.
         if self.log_data:
@@ -127,14 +136,12 @@ class CSTRSimulation():
         self.Tc = Tc0
 
         # Initialize auxiliary variables.
-        self.ΔTc = 0                # Action parsed from the brain.
-        self.max_trans_time = 90    # Max considered transition time (the simulation can run further theoretically).
-        self.it_time = 0            # Initialize current simulation time.
-
-        # Store configuration received for current episode.
-        self.Cref_signal = Cref_signal
-        self.noise_percentage = noise_percentage
-        self.step_time = step_time
+        # Action parsed from the brain.
+        self.ΔTc = 0
+        # Max considered transition time (the simulation cannot run further).
+        self.max_trans_time = max_simulation_time
+        # Initialize current simulation time.
+        self.it_time = 0
         
 
         ## INITIALIZE ENVIRONMENT VARIABLES BASED ON VALUE OF Cref_signal.
@@ -203,8 +210,8 @@ class CSTRSimulation():
             or self.Cref_signal == 4:
 
             # Select the transient data desired.
-            p1 = 22 
-            p2 = 74
+            p1 = self.transition_start*self.step_time
+            p2 = p1 + 52
             C_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [8.57,8.57,2,2])
             T_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [311.2612,311.2612,373.1311,373.1311])
             
