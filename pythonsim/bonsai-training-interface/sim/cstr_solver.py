@@ -18,7 +18,8 @@ class CSTR_Solver:
 
 
     # Running parameters
-    n: int = 3      # Number of runs to perform to resolve the ODE: Ordinary Differential Equation.
+    edo_solver_n_its: int = 1      # Number of runs to perform to resolve the ODE: Ordinary Differential Equation.
+    step_time: int = 1             # Step time to run the simulation for at each simulation execution.
     
 
     # Problem constants.
@@ -55,11 +56,11 @@ class CSTR_Solver:
 
         # Setup current conditions.
         z0 = [self.Cr, self.Tr]
-        t = np.linspace(0, 1, self.n)
+        t = np.linspace(0, self.step_time, self.edo_solver_n_its+1)
         
         # Setup the changing conditions to the coolant temp.
         #u = [0,self.ΔTc]
-        u = np.zeros(self.n)
+        u = np.zeros(self.edo_solver_n_its+1)
         u[0] = self.ΔTc #-1 0
 
         # Setup output variables to store intermediate results.
@@ -70,7 +71,7 @@ class CSTR_Solver:
         y[0] = z0[1]
 
         # Run the solver for 'n' steps to solve the ODE (Ordinary Differential Equation).
-        for i in range(1,self.n):
+        for i in range(1,self.edo_solver_n_its+1):
             tspan = [t[i-1], t[i]]
             z = odeint(self.model, z0, tspan, args=(u[i],))
             x[i] = z[1][0]
