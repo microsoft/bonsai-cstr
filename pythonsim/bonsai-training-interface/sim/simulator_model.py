@@ -28,25 +28,17 @@ class SimulatorModel:
         
         pass
 
+
     @property
     def sim_name(self):
         return "CSTR_sim"
 
+
     def reset(self, config) -> Dict[str, Any]:
         """ Reset any state from the previous episode and get ready to start a new episode. """
         
-        # Initialize to main config variables
-        # TODO: Modify to pass the dict directly.
-        Cref_signal = 1
-        if "Cref_signal" in config.keys():
-            Cref_signal = config["Cref_signal"]
-        noise_percentage = 0
-        if "noise_percentage" in config.keys():
-            noise_percentage = config["noise_percentage"]
-        
-        # Start simulation.
-        self.sim.reset(Cref_signal=Cref_signal,
-                       noise_percentage=noise_percentage)
+        # Start simulation with selected config.
+        self.sim.reset(config=config)
 
         return self.sim.get_state()                        
 

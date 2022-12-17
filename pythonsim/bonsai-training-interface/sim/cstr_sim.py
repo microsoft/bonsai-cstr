@@ -54,11 +54,12 @@ class CSTRSimulation():
         self.log_data = log_data
         self.sim_logger = SimLogger(log_data=self.log_data)
 
+        # Initialize episodic config dict
+        self.config = {}
+
     def reset(
         self,
-        Cref_signal: float = 3,
-        noise_percentage: float = 0,
-        step_time: float = Δt_sim,
+        config: Dict[str, Any] = {},
 
         # Non-applicable initialization parameters during episode restart
         ΔTc: float = 0,
@@ -82,7 +83,33 @@ class CSTRSimulation():
             (2) STEADY STATE: (Cref, Tref) sustained at (2, 373.1).
             (3) STEADY STATE: (Cref, Tref) sustained at (8.57, 311.3).
             (4) Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1), from its 22 to 74.
+
+        noise_percentage: Noise value to apply to states/actions.
+            int[0, 1]
+
+        step_time: Step time in between actions.
+            float(0.5, 1, 1.5)
+
+        edo_solver_n_its: n iterations to resolve Ordinary Differential Equation.
+            float(0.5, 1, 1.5)
         """
+
+        # Default initialization values
+        self.Cref_signal: float = 4
+        self.noise_percentage: float = 0
+        self.step_time: float = Δt_sim
+        self.edo_solver_n_its: int = 2
+
+        # Config vars received
+        self.config = config
+        if "Cref_signal" in config.keys():
+            self.Cref_signal = config["Cref_signal"]
+        if "noise_percentage" in config.keys():
+            self.noise_percentage = config["noise_percentage"]
+        if "step_time" in config.keys():
+            self.step_time = config["step_time"]
+        if "edo_solver_n_its" in config.keys():
+            self.edo_solver_n_its = config["edo_solver_n_its"]
 
         # Update episode number, and restart iteration count.
         if self.log_data:
