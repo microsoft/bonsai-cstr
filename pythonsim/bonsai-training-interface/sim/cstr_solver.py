@@ -1,3 +1,4 @@
+import traceback
 from dataclasses import dataclass
 import math
 from math import exp
@@ -48,11 +49,14 @@ class CSTR_Solver:
         """""
 
         # Setup current conditions.
-        # TODO: Make this depend on the stepping time.
-        # TODO: Question for Octavio: Why do we run the solver for 3 iterations? Do we know the right amount for the stepping time (0.5s VS 1s)?
-        if abs(self.ΔTc) > 10:
-            self.ΔTc = 10 * self.ΔTc/abs(self.ΔTc)
-            raise ValueError(f"Current provided value of {self.ΔTc} exceeds the max ramp value of 10.")
+        # TODO: Question for Octavio: Why was the solver run for 3 iterations (edo_solver_n_its == 2)?
+        if abs(self.ΔTc) > 10*self.step_time:
+            try:
+                raise ValueError(f"Current provided value of {self.ΔTc} exceeds the max ramp value of {10*self.step_time}.")
+            except Exception:
+                print(traceback.format_exc())
+                self.ΔTc = (10*self.step_time) * self.ΔTc/abs(self.ΔTc)
+                print(f"Execution continues, action has been capped at {self.ΔTc}.\n")
 
         # Setup current conditions.
         z0 = [self.Cr, self.Tr]
