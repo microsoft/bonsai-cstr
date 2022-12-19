@@ -24,7 +24,7 @@ for idx in range(0,sim_max):
     Cr_out_id = 0
     
     # Steady State Initial Condition
-    u_ss = 280.0
+    u_ss = 292.0
     # Tf = Feed Temperature (K)
     Tf = 298.2 #K
     # Caf = Feed Concentration (kmol/m^3)
@@ -44,8 +44,8 @@ for idx in range(0,sim_max):
 
     # initial conditions
     Tc0 = 292
-    T0 = 311
-    Ca0 = 8.57
+    T0 = 311.2612
+    Ca0 = 8.5698
 
     tau = m.Const(value = 3)
     Kp = m.Const(value = 0.75)
@@ -110,7 +110,7 @@ for idx in range(0,sim_max):
         # A - Area - this value is specific for the U calculation (m^2)
         UA = 150 #Overall heat transfer coefficient multiplied by tank area (kcal/(K·h))
         # reaction rate
-        rA = k0*np.exp(-EoverR/T)*Ca
+        rA = k0*math.exp(-EoverR/T)*Ca
 
         # Calculate concentration derivative
         dCadt = q/V*(Caf - Ca) - rA
@@ -127,7 +127,7 @@ for idx in range(0,sim_max):
 
     # time Interval (min)
     time = 45 #simulation time (min)
-    t = np.linspace(0,time, time)
+    t = np.linspace(0,time, time+1)
     
     # Store results for plotting
     Ca = np.ones(len(t)) * Ca_ss
@@ -138,8 +138,8 @@ for idx in range(0,sim_max):
     u = np.ones(len(t)) * u_ss
 
     # Set points - reference
-    p1 = 10 #time to start the transition
-    p2 = 36 #time to finish the transition
+    p1 = 11 #time to start the transition
+    p2 = 37 #time to finish the transition
 
     T_ = interpolate.interp1d([0,p1,p2,time,time+1], [311.2612,311.2612,373.1311,373.1311,373.1311])
     C = interpolate.interp1d([0,p1,p2,time, time+1], [8.57,8.57,2,2,2])
@@ -163,14 +163,15 @@ for idx in range(0,sim_max):
         σ_max2 = error_var * ( 373.1311 - 311.2612)
         σ_Ca = random.uniform(-σ_max1, σ_max1)
         σ_T = random.uniform(-σ_max2, σ_max2)
-        Ca[i+1] = y[-1][0] + σ_T
-        T[i+1] = y[-1][1] + σ_Ca
+        Ca[i+1] = y[-1][0] #+ σ_T
+        T[i+1] = y[-1][1] #+ σ_Ca
         # insert measurement
         m.T.MEAS = T[i+1]
+        # Juan: Reference points modified to be the current timestamp, not the next (as in cstr_sim).
         # update setpoint
-        m.T.SP = T_(i+1)
-        Tref = T_(i+1)
-        Cref = C(i+1)
+        m.T.SP = T_(i)
+        Tref = T_(i)
+        Cref = C(i)
         Tsp.append(Tref)
         Csp.append(Cref)
         # solve MPC
