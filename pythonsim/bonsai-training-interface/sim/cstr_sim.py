@@ -247,8 +247,8 @@ class CSTRSimulation():
         Tr_error = error_var * random.uniform(-T_max_range, T_max_range)
 
         # Call the CSTR solver.
-        model = CSTR_Solver(Tr = self.Tr,
-                            Cr = self.Cr,
+        model = CSTR_Solver(Tr = self.Tr_no_noise,
+                            Cr = self.Cr_no_noise,
                             Tc = self.Tc,
                             ΔTc = self.ΔTc,
                             step_time = self.step_time,
