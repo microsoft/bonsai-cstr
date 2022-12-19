@@ -75,16 +75,16 @@ class CSTR_Solver:
         y[0] = z0[1]
 
         # Run the solver for 'n' steps to solve the ODE (Ordinary Differential Equation).
-        for i in range(1,self.edo_solver_n_its+1):
-            tspan = [t[i-1], t[i]]
+        for i in range(0, self.edo_solver_n_its):
+            tspan = [t[i], t[i+1]]
             z = odeint(self.model, z0, tspan, args=(u[i],))
-            x[i] = z[1][0]
-            y[i] = z[1][1]
-            z0 = z[1]
+            x[i+1] = z[-1][0]
+            y[i+1] = z[-1][1]
+            z0 = z[-1]
         
         # Extract the upadted values for reactor temp & conc, as well as coolant temp.
-        self.Cr = x[1]
-        self.Tr = y[1]
+        self.Cr = x[-1]
+        self.Tr = y[-1]
         self.Tc += self.ΔTc
     
 
