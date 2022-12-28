@@ -12,6 +12,14 @@ Tref_error = []
 Cr_out = []
 Tr_out = []
 
+# Debugging functionality
+debug_code = True
+
+Cr_out_per_it = []
+Tr_out_per_it = []
+Cref_out_per_it = []
+Tref_out_per_it = []
+
 #simulation config
 sim_max = 1 # number of simulations
 error_var = 0.01 # error pct
@@ -118,6 +126,23 @@ for idx in range(0,sim_max):
         dTdt = q/V*(Tf - T) \
                 - mdelH/(rhoCp)*rA \
                 + ((UA/(V*rhoCp))*(Tc-T))
+        debug_type = False
+        if debug_type:
+            print("type(k0)", (k0))
+            print("type(EoverR)", (EoverR))
+            print("type(T)", (T))
+            print("type(Ca)", (Ca))
+            print("type(rA)", (rA))
+            print("type(q)", (q))
+            print("type(V)", (V))
+            print("type(Tf)", (Tf))
+            print("type(mdelH)", (mdelH))
+            print("type(rhoCp)", (rhoCp))
+            print("type(UA)", (UA))
+            print("type(Tc)", (Tc))
+            print("type(dCadt)", (dCadt))
+            print("type(dTdt)", (dTdt))
+            a = 1/0
 
         # Return xdot:
         xdot = np.zeros(2)
@@ -151,12 +176,17 @@ for idx in range(0,sim_max):
         plt.figure(figsize=(10,7))
         plt.ion()
         plt.show()
-
+    
     # Simulate CSTR with controller
     for i in range(len(t)-1):
         # simulate one time period
         ts = [t[i],t[i+1]]
+        if debug_code:
+            print(f"-- x0[1] --> {x0[1]},  T[i+1] --> {T[i+1]}")
+            print(f"aux: x0 {x0}, ts {ts}, u[i] {u[i]}, Tf {Tf}, Caf {Caf}")
         y = odeint(cstr,x0,ts,args=(u[i],Tf,Caf))
+        if debug_code:
+            print(y)
         # retrieve measurements
         # apply noise
         σ_max1 = error_var * (8.5698 - 2)
@@ -170,10 +200,18 @@ for idx in range(0,sim_max):
         # Juan: Reference points modified to be the current timestamp, not the next (as in cstr_sim).
         # update setpoint
         m.T.SP = T_(i)
+        if debug_code:
+            print(f"  --> m.T.MEAS {m.T.MEAS}, m.T.SP {m.T.SP}")
         Tref = T_(i)
         Cref = C(i)
         Tsp.append(Tref)
         Csp.append(Cref)
+        if debug_code:
+            print(f"AUX VARS -- {T[i+1]}, {Ca[i+1]}, {T_(i+1)}, {C(i+1)},")
+        Cr_out_per_it.append(float(Ca[i+1]))
+        Tr_out_per_it.append(float(T[i+1]))
+        Cref_out_per_it.append(float(Cref))
+        Tref_out_per_it.append(float(Tref))
         # solve MPC
         m.solve(disp=display_mpc_vals)
         # change to a fixed starting point for trajectory
@@ -234,3 +272,9 @@ print("Ca RMF: ", Ca_RMS , "+- ", np.std(Ca_error))
 print("Tr RMF: ", Tref_RMS, "+- ", np.std(Tref_error))
 print("Thermal Runaway: ", (np.sum(Cr_out)/sim_max)*100 , " %")
 print("Concentration Out: ", (np.sum(Tr_out)/sim_max)*100, " %" )
+
+#print results
+print("\nCr OUT -- Cr_out_per_it: ", Cr_out_per_it)
+print("\nTr OUT -- Tr_out_per_it: ", Tr_out_per_it)
+print("\nCa OUT -- Cref_out_per_it: ", Cref_out_per_it)
+print("\nCa OUT -- Tref_out_per_it: ", Tref_out_per_it)
