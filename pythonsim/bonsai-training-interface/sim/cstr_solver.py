@@ -35,6 +35,9 @@ class CSTR_Solver:
     Cafin: float = 10   # Feed Concentration (kmol/m^3)
     Tf: float = 298.2   # Feed Temperature (K)
 
+    # debug functionality through print statements (old school)
+    debug: bool = False
+
 
     def __post_init__(self):
         """""
@@ -77,14 +80,21 @@ class CSTR_Solver:
         # Run the solver for 'n' steps to solve the ODE (Ordinary Differential Equation).
         for i in range(0, self.edo_solver_n_its):
             tspan = [t[i], t[i+1]]
+            if self.debug:
+                print(f"aux: z0 {z0}, tspan {tspan}, u[i] {self.Tc+u[i]}")
             z = odeint(self.model, z0, tspan, args=(u[i],))
             x[i+1] = z[-1][0]
             y[i+1] = z[-1][1]
             z0 = z[-1]
+            if self.debug:
+                print(z0)
         
         # Extract the upadted values for reactor temp & conc, as well as coolant temp.
         self.Cr = x[-1]
         self.Tr = y[-1]
+        if self.debug:
+            print("self.Cr", self.Cr)
+            print("self.Tr", self.Tr)
         self.Tc += self.ΔTc
     
 
