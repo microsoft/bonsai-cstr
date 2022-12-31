@@ -6,6 +6,8 @@ from scipy import interpolate
 import math
 import random
 
+from cstr_sim import CSTRSimulation
+
 #initialize variables
 Ca_error = []
 Tref_error = []
@@ -31,19 +33,17 @@ for idx in range(0,sim_max):
     Tr_out_id = 0
     Cr_out_id = 0
     
-    # Steady State Initial Condition
-    u_ss = 292.0
-    # Tf = Feed Temperature (K)
-    Tf = 298.2 #K
-    # Caf = Feed Concentration (kmol/m^3)
-    Caf = 10 #kmol/m3
+    cstr_sim = CSTRSimulation(debug=debug_code)
+    cstr_sim.reset(config={"edo_solver_n_its": 1})
+    state = cstr_sim.get_state()
+    Tc_adjust = 0
+    
+    Tr = state["Tr"]
+    Cr = state["Cr"]
+    Tref = state["Tref"]
+    Cref = state["Cref"]
+    print(f"AUX VARS -- {Tr}, {Cr}, {Tref}, {Cref},")
 
-    # Steady State as initial condition for the states
-    Ca_ss = 8.5698
-    T_ss = 311.2612
-    x0 = np.empty(2)
-    x0[0] = Ca_ss
-    x0[1] = T_ss
 
     # GEKKO linear MPC
     m = GEKKO(remote=remote_server)
@@ -60,7 +60,7 @@ for idx in range(0,sim_max):
 
     # Manipulated and Controlled Variables
     m.Tc = m.MV(value = Tc0,lb=273,ub=322) #mv with constraints
-    m.T = m.CV(value = T_ss) #cv
+    m.T = m.CV(value = T0) #cv
 
     # Process dynamic model
     m.Equation(tau * m.T.dt() == -(m.T - T0) + Kp * (m.Tc - Tc0))
@@ -83,133 +83,65 @@ for idx in range(0,sim_max):
     m.options.IMODE = 6 # MPC
     m.options.SOLVER = 3
 
-    # CSTR model - Real dynamics
-    def cstr(x,t,u,Tf,Caf):
-        # Input
-        # Temperature of cooling jacket (K) - MV
-        Tc = u
-        # Tf = Feed Temperature (K) - Constant
-        Tf = 298.2 #K
-        # Caf = Feed Concentration (kmol/m^3) - Constant
-        Caf = 10 #kmol/m3
-        
-        # States
-        # Concentration of A in CSTR (mol/m^3)
-        Ca = x[0]
-        # Temperature in CSTR (K)
-        T = x[1]
 
-        # Parameters:
-        # Volumetric Flowrate (m^3/sec)
-        q = 1
-        # Volume of CSTR (m^3)
-        V = 1
-        # Density of A-B Mixture (kg/m^3) rho
-        # Heat capacity of A-B Mixture (J/kg-K) Cp
-        rhoCp = 500 #Density multiplied by heat capacity (kcal/(m3·K))
-        # Heat of reaction for A->B (J/mol)
-        mdelH = -5960 #Heat of reaction per mole kcal/kmol
-        # E - Activation energy in the Arrhenius Equation (J/mol)
-        # R - Universal Gas Constant = 8.31451 J/mol-K
-        EoverR = 11843/1.98588
-        # Pre-exponential factor (1/sec)
-        k0 = 34930800 #Pre-exponential nonthermal factor (1/h)
-        # U - Overall Heat Transfer Coefficient (W/m^2-K)
-        # A - Area - this value is specific for the U calculation (m^2)
-        UA = 150 #Overall heat transfer coefficient multiplied by tank area (kcal/(K·h))
-        # reaction rate
-        rA = k0*math.exp(-EoverR/T)*Ca
 
-        # Calculate concentration derivative
-        dCadt = q/V*(Caf - Ca) - rA
-        # Calculate temperature derivative
-        dTdt = q/V*(Tf - T) \
-                - mdelH/(rhoCp)*rA \
-                + ((UA/(V*rhoCp))*(Tc-T))
-        debug_type = False
-        if debug_type:
-            print("type(k0)", (k0))
-            print("type(EoverR)", (EoverR))
-            print("type(T)", (T))
-            print("type(Ca)", (Ca))
-            print("type(rA)", (rA))
-            print("type(q)", (q))
-            print("type(V)", (V))
-            print("type(Tf)", (Tf))
-            print("type(mdelH)", (mdelH))
-            print("type(rhoCp)", (rhoCp))
-            print("type(UA)", (UA))
-            print("type(Tc)", (Tc))
-            print("type(dCadt)", (dCadt))
-            print("type(dTdt)", (dTdt))
-            a = 1/0
-
-        # Return xdot:
-        xdot = np.zeros(2)
-        xdot[0] = dCadt
-        xdot[1] = dTdt
-        return xdot
-
+    
     # time Interval (min)
     time = 45 #simulation time (min)
     t = np.linspace(0,time, time+1)
     
     # Store results for plotting
-    Ca = np.ones(len(t)) * Ca_ss
-    T = np.ones(len(t)) * T_ss
+    Ca = np.ones(len(t)) * Ca0
+    T = np.ones(len(t)) * T0
     #Tsp = np.ones(len(t)) * T_ss
     Tsp = []
     Csp = []
-    u = np.ones(len(t)) * u_ss
-
-    # Set points - reference
-    p1 = 11 #time to start the transition
-    p2 = 37 #time to finish the transition
-
-    T_ = interpolate.interp1d([0,p1,p2,time,time+1], [311.2612,311.2612,373.1311,373.1311,373.1311])
-    C = interpolate.interp1d([0,p1,p2,time, time+1], [8.57,8.57,2,2,2])
-
-    
+    u = np.ones(len(t)) * Tc0
 
     # Create plot
     if graphics == True:
         plt.figure(figsize=(10,7))
         plt.ion()
         plt.show()
+
     
     # Simulate CSTR with controller
-    for i in range(len(t)-1):
+    for i in range(time):
         # simulate one time period
         ts = [t[i],t[i+1]]
-        if debug_code:
-            print(f"-- x0[1] --> {x0[1]},  T[i+1] --> {T[i+1]}")
-            print(f"aux: x0 {x0}, ts {ts}, u[i] {u[i]}, Tf {Tf}, Caf {Caf}")
-        y = odeint(cstr,x0,ts,args=(u[i],Tf,Caf))
-        if debug_code:
-            print(y)
+        cstr_sim.step({"Tc_adjust": Tc_adjust})
+        state = cstr_sim.get_state()
+        
+        # Get new sim conditions
+        Tr = state["Tr"]
+        Cr = state["Cr"]
+        Tref = state["Tref"]
+        Cref = state["Cref"]
+
         # retrieve measurements
         # apply noise
         σ_max1 = error_var * (8.5698 - 2)
         σ_max2 = error_var * ( 373.1311 - 311.2612)
         σ_Ca = random.uniform(-σ_max1, σ_max1)
         σ_T = random.uniform(-σ_max2, σ_max2)
-        Ca[i+1] = y[-1][0] #+ σ_T
-        T[i+1] = y[-1][1] #+ σ_Ca
+        # Update graph values
+        Ca[i+1] = Cr #+ σ_T
+        T[i+1] = Tr #+ σ_Ca
+
+        # COMPUTATION OF MPC
         # insert measurement
-        m.T.MEAS = T[i+1]
-        # Juan: Reference points modified to be the current timestamp, not the next (as in cstr_sim).
+        m.T.MEAS = Tr
         # update setpoint
-        m.T.SP = T_(i)
+        m.T.SP = Tref
         if debug_code:
             print(f"  --> m.T.MEAS {m.T.MEAS}, m.T.SP {m.T.SP}")
-        Tref = T_(i)
-        Cref = C(i)
+        
         Tsp.append(Tref)
         Csp.append(Cref)
         if debug_code:
-            print(f"AUX VARS -- {T[i+1]}, {Ca[i+1]}, {T_(i+1)}, {C(i+1)},")
-        Cr_out_per_it.append(float(Ca[i+1]))
-        Tr_out_per_it.append(float(T[i+1]))
+            print(f"AUX VARS -- {Tr}, {Cr}, {Tref}, {Cref},")
+        Cr_out_per_it.append(float(Cr))
+        Tr_out_per_it.append(float(Tr))
         Cref_out_per_it.append(float(Cref))
         Tref_out_per_it.append(float(Tref))
         # solve MPC
@@ -218,20 +150,19 @@ for idx in range(0,sim_max):
         m.T.TR_INIT = 2
         # retrieve new Tc values
         u[i+1] = m.Tc.NEWVAL
-        # update initial conditions
-        x0[0] = Ca[i+1]
-        x0[1] = T[i+1]
+        Tc_adjust = u[i+1]-u[i]
 
-        error = (x0[0] - Cref)**2
+
+        error = (Cr - Cref)**2
         Ca_error.append(error)
-        error = (x0[1] - Tref)**2
+        error = (Tr - Tref)**2
         Tref_error.append(error)
         
         # Identify non desirable scenarios
-        if x0[1] >= 400:
+        if Tr >= 400:
             print("#### THERMAL RUNAWAY !! ###")
             Tr_out_id = 1
-        elif x0[0] < 0.1 or x0[0] > 12 :
+        elif Cr < 0.1 or Cr > 12 :
             Cr_out_id = 1
             print("#### CONCENTRATION OUT OF SPEC!! ###")
 
