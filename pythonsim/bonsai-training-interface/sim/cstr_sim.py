@@ -252,7 +252,8 @@ class CSTRSimulation():
                             Tc = self.Tc,
                             ΔTc = self.ΔTc,
                             step_time = self.step_time,
-                            edo_solver_n_its = self.edo_solver_n_its)
+                            edo_solver_n_its = self.edo_solver_n_its,
+                            debug=self.debug)
 
         # EXTRACT UPDATED VALUES FROM SOLVER.    
         #self.Tc += self.ΔTc
