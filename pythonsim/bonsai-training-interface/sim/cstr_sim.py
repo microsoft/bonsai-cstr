@@ -197,6 +197,13 @@ class CSTRSimulation():
         self.Tr += Tr_error     # Tr - Temperature of the reactor's output.
         self.Cr += Cr_error     # Cr - Concentration of the reactor's output.
 
+        # Create render vectors
+        self.Cr_vec = [self.Cr]
+        self.Tr_vec = [self.Tr]
+        self.Cref_vec = [self.Cref]
+        self.Tref_vec = [self.Tref]
+        self.Tc_vec = [self.Tc]
+
 
     def step(self, action: Dict[str, Any]):
         """Step through the environment.
@@ -267,6 +274,18 @@ class CSTRSimulation():
         # Increase the current iteration time by the stepping time.
         self.it_time += self.step_time
 
+        # Update render vectors
+        self.Cr_vec.append(self.Cr)
+        self.Tr_vec.append(self.Tr)
+        self.Cref_vec.append(self.Cref)
+        self.Tref_vec.append(self.Tref)
+        self.Tc_vec.append(self.Tc)
+
+        # RENDER
+        if self.render:
+            self.render_f()
+
+
     def random_step(self) -> None:
         #self.step(action.get("Tc_adjust"))
         self.step(np.random.randint(-10,10))
@@ -297,6 +316,42 @@ class CSTRSimulation():
             print(traceback.format_exc())
             print("Execution continues, sim needs to be reset to continue running.")
             return True
+    
+
+    def render_f(self):
+        """Render status of the simulation.
+        """
+        
+        self.its = int(self.it_time/self.step_time)
+        t_vec = np.linspace(0, self.it_time, self.its+1)
+
+        plt.clf()
+        
+        # Plot coolant temperature over time.
+        plt.subplot(3,1,1)
+        plt.plot(t_vec[0:self.its], self.Tc_vec[0:self.its], 'k.-', lw=2)
+        plt.ylabel('Cooling Tc (K)')
+        plt.legend(['Jacket Temperature'], loc='best')
+
+        # Plot coolant concentration and setpoints over time.
+        plt.subplot(3,1,2)
+        plt.plot(t_vec[0:self.its], self.Cr_vec[0:self.its], 'b.-', lw=3, label=r'$C_{meas}$')
+        plt.plot(t_vec[0:self.its], self.Cref_vec[0:self.its], 'k--', lw=2, label=r'$C_{sp}$')
+        plt.ylabel('Ca (mol/L)')
+        plt.legend(['Reactor Concentration','Concentration Setpoint'], loc='best')
+
+        # Plot coolant temperature and setpoints over time.
+        plt.subplot(3,1,3)
+        plt.plot(t_vec[0:self.its], self.Tr_vec[0:self.its], 'b.-', lw=3, label=r'$T_{meas}$')
+        plt.plot(t_vec[0:self.its], self.Tref_vec[0:self.its], 'k--', lw=2, label=r'$T_{sp}$')
+        plt.plot(t_vec[0:self.its], [400 for x in range(0,self.its)], 'r--',lw=1)
+        plt.ylabel('T (K)')
+        plt.xlabel('Time (min)')
+        plt.legend(['Temperature Setpoint','Reactor Temperature'], loc='best')
+
+        # Plot and hold.
+        plt.draw()
+        plt.pause(0.001)
 
 
 def main():
