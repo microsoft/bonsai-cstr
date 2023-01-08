@@ -228,8 +228,8 @@ class CSTRSimulation():
             or self.Cref_signal == 4:
 
             # Select the transient data desired.
-            p1 = self.transition_start*self.step_time
-            p2 = p1 + 26
+            p1 = int(self.transition_start/self.step_time)
+            p2 = p1 + int(26/self.step_time)
             C_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [8.57,8.57,2,2])
             T_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [311.2612,311.2612,373.1311,373.1311])
             
