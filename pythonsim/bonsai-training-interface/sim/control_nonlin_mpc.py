@@ -11,7 +11,7 @@ import sys
 from casadi import *
 from scipy import interpolate
 
-from cstr_solver import CSTR_Solver as CSTR_Solver
+from sim.cstr_solver import CSTR_Solver
 
 # Import do_mpc package:
 import do_mpc
