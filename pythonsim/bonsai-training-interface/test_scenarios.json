@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "context": {},
+  "episodeConfigurations": [
+    {
+      "Cref_signal": 4,
+      "noise_percentage": 0,
+      "control_mode": "direct_control"
+    },
+    {
+      "Cref_signal": 4,
+      "noise_percentage": 0,
+      "control_mode": "linear_mpc"
+    }
+  ]
+}

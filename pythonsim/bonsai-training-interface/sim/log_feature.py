@@ -100,8 +100,8 @@ class SimLogger:
         action = add_prefixes(action, "action")
         config = add_prefixes(config, "config")
         data = {**log_state, **action, **config}
-        data["episode"] = self.episode
-        data["iteration"] = self.iteration
+        data["EpisodeIndex"] = self.episode
+        data["IterationIndex"] = self.iteration
         log_df = pd.DataFrame(data, index=[0])
 
         if os.path.exists(self.log_full_path):
