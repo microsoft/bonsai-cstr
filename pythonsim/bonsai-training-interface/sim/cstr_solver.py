@@ -102,23 +102,70 @@ class CSTR_Solver:
         """""
         Method that resolves the ODE (ordinary differential equation).
         """""
-        x = z[0]  # Reactor Concentrarion
+        x = z[0]  # Reactor Concentration
         y = z[1]  # Reactor Temperature
         
-        # reaction rate
-        rA = self.k0 * exp(-self.E/(self.R*y))*x
+        ## COMMENT OUT PREVIOUS DIRECT COMPUTATION.
+        ## reaction rate
+        #rA = self.k0 * exp(-self.E/(self.R*y))*x
+        #
+        ## Calculate concentration derivative
+        #dxdt = (self.F/self.V * (self.Cafin - x)) - rA
+        ## Calculate temperature derivative
+        #dydt = (self.F/self.V *(self.Tf-y)) \
+        #       - ((self.ΔH/self.phoCp)*rA) \
+        #       - ((self.UA /(self.phoCp*self.V)) * (y - (self.Tc + u)))
 
         # Calculate concentration derivative
-        dxdt = (self.F/self.V * (self.Cafin - x)) - rA
+        dxdt = self.model_Cr(x, y)
+
         # Calculate temperature derivative
-        dydt = (self.F/self.V *(self.Tf-y)) \
-               - ((self.ΔH/self.phoCp)*rA) \
-               - ((self.UA /(self.phoCp*self.V)) * (y - (self.Tc + u)))
+        dydt = self.model_Tr(x, y, self.Tc + u)
+        
+        debug_type = False
+        if debug_type:
+            print("type(self.k0)", (self.k0))
+            print("type(self.E)", (self.E))
+            print("type(self.R)", (self.R))
+            print("type(y)", (y))
+            print("type(x)", (x))
+            rA = self.model_rA(y, x)
+            print("type(rA)", (rA))
+            print("type(self.F)", (self.F))
+            print("type(self.V)", (self.V))
+            print("type(self.Tf)", (self.Tf))
+            print("type(self.ΔH)", (self.ΔH))
+            print("type(self.phoCp)", (self.phoCp))
+            print("type(self.UA)", (self.UA))
+            print("type(self.Tc + u)", (self.Tc + u))
+            print("type(dxdt)", (dxdt))
+            print("type(dydt)", (dydt))
+            a = 1/0
 
         dzdt = [dxdt,dydt]
         return dzdt
-            
-            
+    
+    
+    def model_rA(self, Tr, Cr):
+        # reaction rate
+        rA = self.k0 * exp(-self.E/(self.R*Tr))*Cr
+        return rA
+    
+    
+    def model_Cr(self, Cr, Tr):
+        # Calculate concentration derivative
+        rA = self.model_rA(Tr, Cr)
+        dCr = (self.F/self.V * (self.Cafin - Cr)) - rA
+        return dCr
+    
+    
+    def model_Tr(self, Cr, Tr, Tc):
+        # Calculate temperature derivative
+        rA = self.model_rA(Tr, Cr)
+        dTr = (self.F/self.V *(self.Tf-Tr)) \
+               - ((self.ΔH/self.phoCp)*rA) \
+               - ((self.UA /(self.phoCp*self.V)) * (Tr - Tc))
+        return dTr
 
         
         

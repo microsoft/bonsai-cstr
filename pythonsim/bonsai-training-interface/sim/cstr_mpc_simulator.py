@@ -11,6 +11,8 @@ import sys
 from casadi import *
 from scipy import interpolate
 
+from cstr_solver import CSTR_Solver as CSTR_Solver
+
 # Import do_mpc package:
 import do_mpc
 
@@ -20,47 +22,40 @@ import do_mpc
 
 π = math.pi
 
-def non_lin_mpc(noise, CrSP, Ca0, T0, Tc0):
+def non_lin_mpc(noise, CrSP, Cr0, T0, Tc0):
 
-    # CSTR Simulation Constants
-    F = 1 #Volumetric flow rate (m3/h)
-    V = 1 #Reactor volume (m3)
-    k0 = 34930800 #Pre-exponential nonthermal factor (1/h)
-    E = 11843 #Activation energy per mole (kcal/kmol)
-    R = 1.985875 #Boltzmann's ideal gas constant (kcal/(kmol·K))
-    ΔH = -5960 #Heat of reaction per mole kcal/kmol
-    phoCp = 500 #Density multiplied by heat capacity (kcal/(m3·K))
-    UA = 150 #Overall heat transfer coefficient multiplied by tank area (kcal/(K·h))
-    Cafin = 10 #kmol/m3
-    Tf = 298.2 #K
-    
-    # initial conditions <version CMS.py>
-    #Ca0 = 8.5698 #kmol/m3
-    #T0 = 311.2639 #K
-    #Tc0 = 292 #K
+
+    # Call the CSTR solver for mpc modeling.
+    solver = CSTR_Solver(Tr = T0,
+                         Cr = Cr0,
+                         Tc = Tc0,
+                         ΔTc = 0,
+                         step_time = Δt,
+                         edo_solver_n_its = 1,
+                         debug=False)
         
     #MPC MODEL
     model_type = 'continuous' # either 'discrete' or 'continuous'
     model = do_mpc.model.Model(model_type)
     
     # State - Environment variables CV
-    Ca = model.set_variable(var_type='_x', var_name='Ca', shape=(1,1)) #Concentration
-    T = model.set_variable(var_type='_x', var_name='T', shape=(1,1)) #Temperature
+    Cr = model.set_variable(var_type='_x', var_name='Cr', shape=(1,1)) # Concentration
+    Tr = model.set_variable(var_type='_x', var_name='Tr', shape=(1,1)) # Temperature
 
     # define measurements:
-    model.set_meas('Ca', Ca, meas_noise=True)
-    model.set_meas('T', T, meas_noise=True)
+    model.set_meas('Cr', Cr, meas_noise=True)
+    model.set_meas('Tr', Tr, meas_noise=True)
 
     # Input - Manipulated Variable MV
-    Tc = model.set_variable(var_type='_u', var_name='Tc') #cooling liquid temperature
+    Tc = model.set_variable(var_type='_u', var_name='Tc') # Coolant temperature
 
     # Non-fixed Time Varying parameters:
-    Caf = model.set_variable(var_type='_tvp', var_name='Caf')
+    Cref = model.set_variable(var_type='_tvp', var_name='Cref')
     Tref = model.set_variable(var_type='_tvp', var_name='Tref')
 
     # Process Dynamics Model
-    model.set_rhs('Ca', (F/V * (Cafin - Ca)) - (k0 * exp(-E/(R*T))*Ca)  )
-    model.set_rhs('T', (F/V *(Tf-T)) - ((ΔH/phoCp)*(k0 * exp(-E/(R*T))*Ca)) - ((UA /(phoCp*V)) *(T-Tc)) )
+    model.set_rhs('Cr', solver.model_Cr(Cr, Tr) )
+    model.set_rhs('Tr', solver.model_Tr(Cr, Tr, Tc) )
 
     # Build the model
     model.setup()
@@ -80,7 +75,7 @@ def non_lin_mpc(noise, CrSP, Ca0, T0, Tc0):
 
     mpc.set_param(**setup_mpc)
     # scaling variables
-    mpc.scaling['_x', 'T'] = 100
+    mpc.scaling['_x', 'Tr'] = 100
     mpc.scaling['_u', 'Tc'] = 100
     #mpc.scaling['_u', 'ω_s'] = 1
 
@@ -89,11 +84,11 @@ def non_lin_mpc(noise, CrSP, Ca0, T0, Tc0):
     _tvp = model.tvp
     _u = model.u #<version NLMM.py>
     # <version cstr_mpc_simulator.py (CMS.py)>
-    #mterm = ((_x['Ca'] - _tvp['Caf']))**2 # terminal cost
-    #lterm = ((_x['Ca'] - _tvp['Caf']))**2 # stage cost
+    #mterm = ((_x['Cr'] - _tvp['Cref']))**2 # terminal cost
+    #lterm = ((_x['Cr'] - _tvp['Cref']))**2 # stage cost
     # <version non_linear_mpc_model.py (NLMM.py)>
-    mterm = ((_x['Ca'] - CrSP))**2 # terminal cost
-    lterm = ((_x['Ca'] - CrSP))**2 # stage cost
+    mterm = ((_x['Cr'] - CrSP))**2 # terminal cost
+    lterm = ((_x['Cr'] - CrSP))**2 # stage cost
 
     mpc.set_objective(mterm=mterm, lterm=lterm)
 
@@ -101,13 +96,13 @@ def non_lin_mpc(noise, CrSP, Ca0, T0, Tc0):
 
     # SETUP CONSTRAINTS
     # constraints on states
-    mpc.bounds['lower', '_x', 'Ca'] = 0.1
-    mpc.bounds['upper', '_x', 'Ca'] = 12
+    mpc.bounds['lower', '_x', 'Cr'] = 0.1
+    mpc.bounds['upper', '_x', 'Cr'] = 12
     
-    mpc.bounds['upper', '_x', 'T'] = 400
-    mpc.bounds['lower', '_x', 'T'] = 100
+    mpc.bounds['upper', '_x', 'Tr'] = 400
+    mpc.bounds['lower', '_x', 'Tr'] = 100
 
-    #mpc.set_nl_cons('Ca', _x['Ca'], ub=2, soft_constraint=True, penalty_term_cons=1e4) #<version NLMM.py>
+    #mpc.set_nl_cons('Cr', _x['Cr'], ub=2, soft_constraint=True, penalty_term_cons=1e4) #<version NLMM.py>
 
     # lower bounds of the inputs
     #mpc.bounds['lower', '_u', 'dTc'] = -10 #<version NLMM.py>
@@ -187,8 +182,8 @@ def non_lin_mpc(noise, CrSP, Ca0, T0, Tc0):
 
     # Set the initial state of mpc, simulator and estimator:
     x0 = simulator.x0
-    x0['Ca'] = Ca0
-    x0['T'] = T0
+    x0['Cr'] = Cr0
+    x0['Tr'] = T0
 
     u0 = simulator.u0
     u0['Tc'] = Tc0
@@ -208,7 +203,7 @@ def non_lin_mpc(noise, CrSP, Ca0, T0, Tc0):
 
     # Simulate N steps
     Cref_vals = []
-    Ca_error = []
+    Cr_error = []
     Tref_vals = []
     Tref_error = []
     u0_old = 0
@@ -271,7 +266,7 @@ def non_lin_mpc(noise, CrSP, Ca0, T0, Tc0):
             
         Cref_vals.append(Cref)
         error = (y_next[0][0] - Cref)**2
-        Ca_error.append(error)
+        Cr_error.append(error)
 
         Tref_vals.append(Tref)
         error = (y_next[1][0] - Tref)**2
@@ -283,7 +278,7 @@ def non_lin_mpc(noise, CrSP, Ca0, T0, Tc0):
 
 
 
-#print(non_lin_mpc(noise = 0, CrSP = 8.57 , Ca0 = 8.5698 , T0 = 311.2639 , Tc0 = 292))
+#print(non_lin_mpc(noise = 0, CrSP = 8.57 , Cr0 = 8.5698 , T0 = 311.2639 , Tc0 = 292))
 
         
 
