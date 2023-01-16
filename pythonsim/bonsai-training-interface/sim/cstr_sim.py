@@ -7,7 +7,7 @@ from scipy import interpolate
 import math
 from typing import Dict, Any, Union
 
-from cstr_solver import CSTR_Solver as CSTR_Solver
+from sim.cstr_solver import CSTR_Solver
 
 import numpy as np
 import sys
@@ -19,7 +19,7 @@ from sim.log_feature import SimLogger
 # time step (seconds) between state updates
 Δt_sim = 1
 thermal_runaway = 400
-        # Max considered transition time (the simulation cannot run further).
+# Max considered transition time (the simulation cannot run further).
 max_simulation_time = 1000
 
 # Known equilibrion relationships for concentration and temperature
@@ -58,6 +58,9 @@ class CSTRSimulation():
 
         # Initialize episodic config dict
         self.config = {}
+
+        # Initialize conditions to prevent issues if calling self.get_states().
+        self.reset()
 
     def reset(
         self,
@@ -273,7 +276,7 @@ class CSTRSimulation():
 
         # Increase the current iteration time by the stepping time.
         self.it_time += self.step_time
-
+        
         # Update render vectors
         self.Cr_vec.append(self.Cr)
         self.Tr_vec.append(self.Tr)
@@ -300,6 +303,7 @@ class CSTRSimulation():
             "Tc": self.Tc,      # Temperature of the coolant (Kelvin).
             "Cref": self.Cref,  # Reference concentration desired by the operators at reactor's output (kmol/m3).
             "Tref": self.Tref,  # Reference temperature desired by the operators at reactor's output (Kelvin).
+            "Tc_adjust": self.ΔTc,  # Last action applied.
         }
 
     def halted(self) -> bool:
