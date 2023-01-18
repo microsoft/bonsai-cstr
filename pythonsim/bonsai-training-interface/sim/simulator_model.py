@@ -1,5 +1,6 @@
 from sim.cstr_sim import CSTRSimulation
 from sim.control_linear_mpc import linear_mpc
+from sim.control_nonlin_mpc import non_lin_mpc
 from typing import NamedTuple, Dict, Any, Union
 
 
@@ -78,5 +79,11 @@ class SimulatorModel:
             self.sim = linear_mpc(render = self.render,
                                   log_data = self.log_data,
                                   debug = self.debug)
+        
+        elif config["control_mode"] == "non_linear_mpc":
+            self.control_mode = "non_linear_mpc"
+            self.sim = non_lin_mpc(render = self.render,
+                                   log_data = self.log_data,
+                                   debug = self.debug)
 
         return
