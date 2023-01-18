@@ -145,6 +145,8 @@ class CSTRSimulation():
         self.max_trans_time = max_simulation_time
         # Initialize current simulation time.
         self.it_time = 0
+        # KPIs
+        self.rms_conc_error = 0
 
 
         ## INITIALIZE ENVIRONMENT VARIABLES BASED ON VALUE OF Cref_signal.
@@ -276,6 +278,9 @@ class CSTRSimulation():
 
         # Increase the current iteration time by the stepping time.
         self.it_time += self.step_time
+
+        # Compute KPI.
+        self.compute_kpi()
         
         # Update render vectors
         self.Cr_vec.append(self.Cr)
@@ -298,12 +303,13 @@ class CSTRSimulation():
         return {
             "Cr_no_noise": self.Cr_no_noise,      # Concentration at the reactor's output, without any noise introduced (kmol/m3).
             "Tr_no_noise": self.Tr_no_noise,      # Temperature at the reactor's output, without any noise introduced (Kelvin).
-            "Cr": self.Cr,         # Concentration at the reactor's output (kmol/m3).
-            "Tr": self.Tr,         # Temperature at the reactor's output (Kelvin).
-            "Tc": self.Tc,      # Temperature of the coolant (Kelvin).
-            "Cref": self.Cref,  # Reference concentration desired by the operators at reactor's output (kmol/m3).
-            "Tref": self.Tref,  # Reference temperature desired by the operators at reactor's output (Kelvin).
+            "Cr": self.Cr,          # Concentration at the reactor's output (kmol/m3).
+            "Tr": self.Tr,          # Temperature at the reactor's output (Kelvin).
+            "Tc": self.Tc,          # Temperature of the coolant (Kelvin).
+            "Cref": self.Cref,      # Reference concentration desired by the operators at reactor's output (kmol/m3).
+            "Tref": self.Tref,      # Reference temperature desired by the operators at reactor's output (Kelvin).
             "Tc_adjust": self.ΔTc,  # Last action applied.
+            "kpi_rms_conc_error": self.rms_conc_error # Computation of our KPI of interest.
         }
 
     def halted(self) -> bool:
@@ -320,6 +326,21 @@ class CSTRSimulation():
             print(traceback.format_exc())
             print("Execution continues, sim needs to be reset to continue running.")
             return True
+    
+
+    def compute_kpi(self):
+        
+        # Compute past RMS (based on previous RMS).
+        n_its = int(self.it_time/self.step_time)
+        past_sq_conc_error = (self.rms_conc_error**2)
+        past_premean_conc_error = past_sq_conc_error*max(n_its-1, 0)
+        # Compute new Squared error.
+        current_sq_error = (self.Cr_no_noise - self.Cref)**2
+        # Compute new RMS.
+        updated_sq_error = past_premean_conc_error + current_sq_error
+        updated_ms_error = (updated_sq_error)/max(n_its, 1)
+        updated_rms_error = np.sqrt(updated_ms_error)
+        self.rms_conc_error = updated_rms_error
     
 
     def render_f(self):
