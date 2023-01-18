@@ -112,39 +112,18 @@ def non_lin_mpc(noise, CrSP, Cr0, T0, Tc0):
     #mpc.bounds['upper', '_u', 'dTc'] = 10 #<version NLMM.py>
     mpc.bounds['upper', '_u', 'Tc'] = 322
 
-    # TIME VARYING VALUES
+        # TIME VARYING PARAMETERS
     # in optimizer configuration:
-    tvp_temp_1 = mpc.get_tvp_template()
-    tvp_temp_1['_tvp', :] = np.array([8.5698])
-
-    tvp_temp_2 = mpc.get_tvp_template()
-    tvp_temp_2['_tvp', :] = np.array([2])
-
-    tvp_temp_3 = mpc.get_tvp_template()
-    tvp_temp_3['_tvp', :] = np.array([2])
-
+        tvp_temp = mpc.get_tvp_template()
+        tvp_temp['_tvp', :] = np.array([2])
 
     def tvp_fun(t_now):
-        #setpoint variables
-        p1 = 22 # time to start transition
-        p2 = 74 # time to end transtion
-        time = 90 # simulate 45 minutes with 0.5 min timestep (90 points)
-        ceq = [8.57,6.9275,5.2850,3.6425,2]
-        teq = [311.2612,327.9968,341.1084,354.7246,373.1311]
-        C = interpolate.interp1d([0,p1,p2,time], [8.57,8.57,2,2])
-        T_ = interpolate.interp1d([0,p1,p2,time], [311.2612,311.2612,373.1311,373.1311])
+            aux_Cref, aux_Tref = self.update_references(t_now)
+            y = float(aux_Cref)
+            tvp_temp['_tvp', :] = np.array([y])
+            return tvp_temp
 
-        if t_now < p1:
-            return tvp_temp_1
-        elif t_now >= p1 and t_now < p2:
-            #y = -0.2527*t_now + 11.097 #<version NLMM.py>
-            y = float(C(k))
-            tvp_temp_3['_tvp', :] = np.array([y])
-            return tvp_temp_3
-        else:
-            return tvp_temp_2
-
-    mpc.set_tvp_fun(tvp_fun)
+        mpc.set_tvp_fun(tvp_fun)
 
     mpc.setup()
 

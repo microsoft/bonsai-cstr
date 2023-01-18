@@ -228,7 +228,7 @@ class CSTRSimulation():
                                            config=self.config)
 
         # Update references when applicable.
-        self.Cref, self.Tref = self.update_references()
+        self.Cref, self.Tref = self.update_references(self.it_time)
         
         # Update the latest stored  action received.
         self.ΔTc = Tc_adjust
@@ -310,7 +310,7 @@ class CSTRSimulation():
             return True
     
 
-    def update_references(self):
+    def update_references(self, t_now):
         
         # Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1).
         if self.Cref_signal == 1 \
@@ -322,10 +322,10 @@ class CSTRSimulation():
             T_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [311.2612,311.2612,373.1311,373.1311])
             
             # Store the current iteration in auxiliary variable.
-            k = self.it_time
+            k = t_now
             if self.Cref_signal == 1:
                 # Update for Cref_signal==1, so transition starts right away.
-                k = self.it_time + p1
+                k = t_now + p1
 
             # Define the reference value for current iteration.
             aux_Cref = float(C_sched(k))
