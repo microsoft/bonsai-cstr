@@ -148,7 +148,7 @@ class CSTR_Solver:
     
     def model_rA(self, Tr, Cr):
         # reaction rate
-        rA = self.k0 * exp(-self.E/(self.R*Tr))*Cr
+        rA = self.k0 * np.exp(-self.E/(self.R*Tr))*Cr
         return rA
     
     
