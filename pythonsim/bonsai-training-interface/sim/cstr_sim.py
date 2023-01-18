@@ -227,26 +227,8 @@ class CSTRSimulation():
                                            action=action,
                                            config=self.config)
 
-
-        # Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1).
-        if self.Cref_signal == 1 \
-            or self.Cref_signal == 4:
-
-            # Select the transient data desired.
-            p1 = int(self.transition_start/self.step_time)
-            p2 = p1 + int(26/self.step_time)
-            C_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [8.57,8.57,2,2])
-            T_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [311.2612,311.2612,373.1311,373.1311])
-            
-            # Store the current iteration in auxiliary variable.
-            k = self.it_time
-            if self.Cref_signal == 1:
-                # Update for Cref_signal==1, so transition starts right away.
-                k = self.it_time + p1
-
-            # Define the reference value for current iteration.
-            self.Cref = float(C_sched(k))
-            self.Tref = float(T_sched(k))
+        # Update references when applicable.
+        self.Cref, self.Tref = self.update_references()
         
         # Update the latest stored  action received.
         self.ΔTc = Tc_adjust
@@ -326,6 +308,34 @@ class CSTRSimulation():
             print(traceback.format_exc())
             print("Execution continues, sim needs to be reset to continue running.")
             return True
+    
+
+    def update_references(self):
+        
+        # Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1).
+        if self.Cref_signal == 1 \
+            or self.Cref_signal == 4:
+            # Select the transient data desired.
+            p1 = int(self.transition_start/self.step_time)
+            p2 = p1 + int(26/self.step_time)
+            C_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [8.57,8.57,2,2])
+            T_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [311.2612,311.2612,373.1311,373.1311])
+            
+            # Store the current iteration in auxiliary variable.
+            k = self.it_time
+            if self.Cref_signal == 1:
+                # Update for Cref_signal==1, so transition starts right away.
+                k = self.it_time + p1
+
+            # Define the reference value for current iteration.
+            aux_Cref = float(C_sched(k))
+            aux_Tref = float(T_sched(k))
+        
+        # Let references be static for the remaining tests.
+        else:
+            aux_Cref, aux_Tref = self.Cref, self.Tref
+
+        return aux_Cref, aux_Tref
     
 
     def compute_kpi(self):

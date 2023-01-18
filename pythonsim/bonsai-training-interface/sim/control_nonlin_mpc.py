@@ -245,24 +245,8 @@ def non_lin_mpc(noise, CrSP, Cr0, T0, Tc0):
         #get all state values
         state_ops = y_next.reshape((1,2))
 
-        #Benchmark
-        p1 = 22 # time to start transition
-        p2 = 74 # time to end transition
-        ceq = [8.57,6.9275,5.2850,3.6425,2]
-        teq = [311.2612,327.9968,341.1084,354.7246,373.1311]
-        C = interpolate.interp1d([0,p1,p2,time], [8.57,8.57,2,2])
-        T_ = interpolate.interp1d([0,p1,p2,time], [311.2612,311.2612,373.1311,373.1311])
-        if k < p1:
-            Cref = 8.5698
-            Tref = 311.2612
-        elif k >= p1 and k < p2:
-            y = float(C(k))
-            y2 = float(T_(k))
-            Cref = y
-            Tref = y2
-        else:
-            Cref = 2
-            Tref = 373.1311
+            # Benchmark
+            Cref, Tref = self.update_references()
             
         Cref_vals.append(Cref)
         error = (y_next[0][0] - Cref)**2
