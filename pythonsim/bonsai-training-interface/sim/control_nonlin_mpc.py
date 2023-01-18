@@ -241,14 +241,9 @@ class non_lin_mpc(CSTRSimulation):
 
 
 
-    def compute_best_action(self):
+    def compute_best_action(self, XX):
 
         k = int(self.it_time/self.step_time)
-        
-        u0_old = 0
-        if k > 1:
-            u0_old = self.u0[0][0]
-        
         
         # INITIALIZE ENVIRONMENT STATES
         # Set the initial state (Cr, Tr) of mpc, simulator and estimator:
@@ -257,12 +252,6 @@ class non_lin_mpc(CSTRSimulation):
         x0['Tr'] = self.Tr
         self.u0 = self.mpc.make_step(x0) # get MPC next action
         #limit controller actions from -10 to 10 degrees Celsius
-        if k > 1:
-            if self.u0[0][0] - u0_old > 10:
-                self.u0 = np.array([[u0_old + 10]])
-            elif self.u0[0][0] - u0_old < -10:
-                self.u0 = np.array([[u0_old - 10]])
-        else: #<version NLMM.py>
             if self.u0[0][0] - self.Tc >= 10:
                 self.u0 = np.array([[self.Tc + 10]])
             elif self.u0[0][0] - self.Tc <= -10:
@@ -286,7 +275,7 @@ class non_lin_mpc(CSTRSimulation):
         
         self.x0 = self.estimator.make_step(y_next) # Simulation next step
 
-        return self.u0
+        return self.u0[0][0]
 
 
 
