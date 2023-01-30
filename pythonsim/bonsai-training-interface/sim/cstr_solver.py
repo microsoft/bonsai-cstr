@@ -53,12 +53,13 @@ class CSTR_Solver:
 
         # Setup current conditions.
         # TODO: Question for Octavio: Why was the solver run for 3 iterations (edo_solver_n_its == 2)?
-        if abs(self.ΔTc) > 10*self.step_time:
+        action_limit = int(10*self.step_time)
+        if abs(self.ΔTc) > action_limit:
             try:
                 raise ValueError(f"Current provided value of {self.ΔTc} exceeds the max ramp value of {10*self.step_time}.")
             except Exception:
                 print(traceback.format_exc())
-                self.ΔTc = (10*self.step_time) * self.ΔTc/abs(self.ΔTc)
+                self.ΔTc = action_limit if self.ΔTc > 0 else -action_limit
                 print(f"Execution continues, action has been capped at {self.ΔTc}.\n")
 
         # Setup current conditions.
