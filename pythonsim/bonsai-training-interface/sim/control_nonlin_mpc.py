@@ -40,7 +40,8 @@ class non_lin_mpc(CSTRSimulation):
         self.init_control()
     
         # Initialize mpc actions.
-        self.XX = 2
+        self.nonlin_mpc_Tc_init = 0
+        self.nonlin_mpc_Tc_adjust = 0
 
 
     def step(
@@ -49,17 +50,20 @@ class non_lin_mpc(CSTRSimulation):
     ):
 
         # Take in and apply MPC characteristics to be updated.
-        self.XX = 2
-        if "XX" in action.keys():
-            self.XX = action["XX"]
+        nonlin_mpc_Tc_init = None
+        if "nonlin_mpc_Tc_init" in action.keys():
+            nonlin_mpc_Tc_init = action["nonlin_mpc_Tc_init"]
         else:
-            print(f"No valid actions parsed to compute_action function in nonlin-mpc control. Action Dict == {action}")
+            print(f"No valid actions parsed to compute_action function in nonlin-mpc control. Received action Dict == {action}")
 
         # Run Linear MPC model.
-        new_Tc = self.compute_best_action(self.XX)
+        self.init_control(nonlin_mpc_Tc_init)
+        new_Tc = self.compute_best_action(nonlin_mpc_Tc_init)
         # Get action for simulation.
         Tc_adjust = new_Tc - self.Tc
         action = dict([("Tc_adjust", Tc_adjust)])
+        self.nonlin_mpc_Tc_adjust = Tc_adjust
+
 
         # Run simulation model with recommended action by Linear MPC.
         super().step(action)
@@ -70,18 +74,28 @@ class non_lin_mpc(CSTRSimulation):
         # Get sim states.
         states = super().get_state()
 
-        # Last XX used by MPC.
-        states["nonlin_mpc_XX"] = self.XX
+
+        # Last Tc_adjust used by MPC.
+        states["nonlin_mpc_Tc_init"] = float(self.nonlin_mpc_Tc_init)
+        # Append recommended value of Tc_adjust (before being capped by solver).
+        states["nonlin_mpc_Tc_adjust"] = float(self.nonlin_mpc_Tc_adjust)
+
 
         return states
 
 
 
-    def init_control(self):
+    def init_control(self, nonlin_mpc_Tc_init = None):
+
 
         Cr0 = self.Cr
         Tr0 = self.Tr
         Tc0 = self.Tc
+        if nonlin_mpc_Tc_init != None:
+            self.nonlin_mpc_Tc_init = nonlin_mpc_Tc_init
+            Tc0 += nonlin_mpc_Tc_init
+        else:
+            self.nonlin_mpc_Tc_init = 0
 
         # Call the CSTR solver for mpc modeling.
         solver = CSTR_Solver(Tr = Tr0,
@@ -176,7 +190,7 @@ class non_lin_mpc(CSTRSimulation):
         tvp_temp['_tvp', :] = np.array([2])
 
         def tvp_fun(t_now):
-            aux_Cref, aux_Tref = self.update_references(t_now)
+            aux_Cref, aux_Tref = self.update_references(t_now+self.it_time)
             y = float(aux_Cref)
             tvp_temp['_tvp', :] = np.array([y])
             return tvp_temp
@@ -252,10 +266,11 @@ class non_lin_mpc(CSTRSimulation):
         x0['Tr'] = self.Tr
         self.u0 = self.mpc.make_step(x0) # get MPC next action
         #limit controller actions from -10 to 10 degrees Celsius
-            if self.u0[0][0] - self.Tc >= 10:
-                self.u0 = np.array([[self.Tc + 10]])
-            elif self.u0[0][0] - self.Tc <= -10:
-                self.u0 = np.array([[self.Tc - 10]])
+        Tc_adjust_limit = 10*self.step_time
+        if self.u0[0][0] - self.Tc >= Tc_adjust_limit:
+            self.u0 = np.array([[self.Tc + Tc_adjust_limit]])
+        elif self.u0[0][0] - self.Tc <= -Tc_adjust_limit:
+            self.u0 = np.array([[self.Tc - Tc_adjust_limit]])
         
         #Add Noise
         #For random samples from N(mu,sigma**2), use: /
@@ -268,7 +283,7 @@ class non_lin_mpc(CSTRSimulation):
         #v0 = mu + σ_max * np.random.randn(0, 1)
         v0 = np.array([mu + σ_max1* np.random.randn(1, 1)[0],mu + σ_max2* np.random.randn(1, 1)[0]])
         
-        y_next = self.simulator.make_step(self.u0,v0=v0) # MPC
+        y_next = self.simulator.make_step(self.u0) #,v0=v0) # MPC
 
         # Get all state values.
         state_ops = y_next.reshape((1,2))
