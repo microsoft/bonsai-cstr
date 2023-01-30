@@ -8,7 +8,6 @@ import pathlib
 import datetime
 from typing import Dict, Any, Union
 #TOREMOVE:import highway_env
-import gym
 import numpy as np
 import copy
 

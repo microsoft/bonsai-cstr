@@ -5,6 +5,11 @@
     {
       "Cref_signal": 4,
       "noise_percentage": 0,
+      "control_mode": "non_linear_mpc"
+    },
+    {
+      "Cref_signal": 4,
+      "noise_percentage": 0,
       "control_mode": "direct_control"
     },
     {
