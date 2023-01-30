@@ -25,8 +25,8 @@ max_simulation_time = 1000
 # Known equilibrion relationships for concentration and temperature
 Cr_eq = [8.57, 6.9275, 5.2850, 3.6425, 2]
 Tr_eq = [311.2612, 327.9968, 341.1084, 354.7246, 373.1311]
-# TODO: Add the equilibrium values for Tc_eq
-Tc_eq = [292, 292, 292, 292, 292]
+Tc_eq = [297.9797, 305.2386, 296.7939, 290.5353, 305.0348]
+
 
 class CSTRSimulation():
     def __init__(
@@ -305,7 +305,7 @@ class CSTRSimulation():
                 raise ValueError("#### REACTOR HAS REACHED THERMAL RUNAWAY !! The simulation is forced to restart. ###")
             elif self.Cr <= 0:
                 raise ValueError("#### REACTOR CONCENTRATION IS BELOW ZERO !! The simulation is forced to restart. ###")
-            elif self.ΔTc > 10 or self.ΔTc < -10 :
+            elif self.ΔTc > 10*self.step_time or self.ΔTc < -10*self.step_time :
                 raise ValueError("#### PHYSICAL LIMITATION REACHED FOR DTc !! ###")
             else:
                 return False
