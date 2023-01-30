@@ -25,7 +25,8 @@ class linear_mpc(CSTRSimulation):
         self.init_control()
     
         # Initialize mpc actions.
-        self.tr_init = 2
+        self.lin_mpc_Tr_init = 2
+        self.lin_mpc_Tc_adjust = 0
 
 
     def step(
@@ -34,17 +35,18 @@ class linear_mpc(CSTRSimulation):
     ):
 
         # Take in and apply MPC characteristics to be updated.
-        self.tr_init = 2
-        if "tr_init" in action.keys():
-            self.tr_init = action["tr_init"]
+        self.lin_mpc_Tr_init = 2
+        if "lin_mpc_Tr_init" in action.keys():
+            self.lin_mpc_Tr_init = action["lin_mpc_Tr_init"]
         else:
-            print(f"No valid actions parsed to compute_action function in linear-mpc control. Action Dict == {action}")
+            print(f"No valid actions parsed to compute_action function in linear-mpc control. Received action Dict == {action}")
 
         # Run Linear MPC model.
         new_Tc = self.compute_best_action(self.tr_init)
         # Get action for simulation.
         Tc_adjust = new_Tc - self.Tc
         action = dict([("Tc_adjust", Tc_adjust)])
+        self.lin_mpc_Tc_adjust = Tc_adjust
 
         # Run simulation model with recommended action by Linear MPC.
         super().step(action)
@@ -55,8 +57,10 @@ class linear_mpc(CSTRSimulation):
         # Get sim states.
         states = super().get_state()
 
-        # Last tr_init used by MPC.
-        states["lin_mpc_tr_init"] = self.tr_init
+        # Last lin_mpc_Tr_init used by MPC.
+        states["lin_mpc_Tr_init"] = float(self.lin_mpc_Tr_init)
+        # Append recommended value of Tc_adjust (before being capped by solver).
+        states["lin_mpc_Tc_adjust"] = float(self.lin_mpc_Tc_adjust)
 
         return states
 
@@ -106,7 +110,10 @@ class linear_mpc(CSTRSimulation):
         return
     
 
-    def compute_best_action(self, tr_init):
+    def compute_best_action(self, lin_mpc_Tr_init):
+
+
+        tr_init_abs = self.Tr + lin_mpc_Tr_init
 
         # COMPUTATION OF MPC
         # insert measurement
@@ -117,7 +124,7 @@ class linear_mpc(CSTRSimulation):
         # solve MPC
         self.m.solve(disp=self.display_mpc_vals)
         # change to a fixed starting point for trajectory
-        self.m.T.TR_INIT = tr_init
+        self.m.T.TR_INIT = tr_init_abs
 
         # retrieve new Tc values
         new_Tc = self.m.Tc.NEWVAL
