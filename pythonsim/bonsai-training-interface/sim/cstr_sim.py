@@ -189,6 +189,7 @@ class CSTRSimulation():
             self.Cref = self.Cr
             self.Tref = self.Tr
 
+        # UPDATE ENV CONDITIONS BASED ON SYSTEM NOISE
         # Define step to introduce to states based on noise_percentage.
         C_max_range = (8.5698 - 2)
         T_max_range = ( 373.1311 - 311.2612)
@@ -249,9 +250,13 @@ class CSTRSimulation():
                             edo_solver_n_its = self.edo_solver_n_its,
                             debug=self.debug)
 
-        # EXTRACT UPDATED VALUES FROM SOLVER.    
-        #self.Tc += self.ΔTc
+        # EXTRACT UPDATED VALUES FROM SOLVER: Tc.
+        # Update Tc using model.Tc, since correction is made in solver to cap at 10*step_time if exceeded.
+        pre_Tc = self.Tc
         self.Tc = model.Tc              # Tc - Temperature of the coolant.
+        self.ΔTc = self.Tc - pre_Tc
+
+        # EXTRACT UPDATED VALUES FROM SOLVER: Tr & Cr.
         self.Tr_no_noise = model.Tr     # Temperature of the reactor's output, clean (without noise introduced).
         self.Cr_no_noise = model.Cr     # Concentration of the reactor's output, clean (without noise introduced).
         # Add noise for inputs to be read by the brain, or selected control.
@@ -283,15 +288,15 @@ class CSTRSimulation():
 
     def get_state(self):
         return {
-            "Cr_no_noise": self.Cr_no_noise,      # Concentration at the reactor's output, without any noise introduced (kmol/m3).
-            "Tr_no_noise": self.Tr_no_noise,      # Temperature at the reactor's output, without any noise introduced (Kelvin).
-            "Cr": self.Cr,          # Concentration at the reactor's output (kmol/m3).
-            "Tr": self.Tr,          # Temperature at the reactor's output (Kelvin).
-            "Tc": self.Tc,          # Temperature of the coolant (Kelvin).
-            "Cref": self.Cref,      # Reference concentration desired by the operators at reactor's output (kmol/m3).
-            "Tref": self.Tref,      # Reference temperature desired by the operators at reactor's output (Kelvin).
-            "Tc_adjust": self.ΔTc,  # Last action applied.
-            "kpi_rms_conc_error": self.rms_conc_error # Computation of our KPI of interest.
+            "Cr_no_noise": float(self.Cr_no_noise),      # Concentration at the reactor's output, without any noise introduced (kmol/m3).
+            "Tr_no_noise": float(self.Tr_no_noise),      # Temperature at the reactor's output, without any noise introduced (Kelvin).
+            "Cr": float(self.Cr),          # Concentration at the reactor's output (kmol/m3).
+            "Tr": float(self.Tr),          # Temperature at the reactor's output (Kelvin).
+            "Tc": float(self.Tc),          # Temperature of the coolant (Kelvin).
+            "Cref": float(self.Cref),      # Reference concentration desired by the operators at reactor's output (kmol/m3).
+            "Tref": float(self.Tref),      # Reference temperature desired by the operators at reactor's output (Kelvin).
+            "Tc_adjust": float(self.ΔTc),  # Last action applied.
+            "kpi_rms_conc_error": float(self.rms_conc_error) # Computation of our KPI of interest.
         }
 
     def halted(self) -> bool:
@@ -318,8 +323,8 @@ class CSTRSimulation():
             # Select the transient data desired.
             p1 = int(self.transition_start/self.step_time)
             p2 = p1 + int(26/self.step_time)
-            C_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [8.57,8.57,2,2])
-            T_sched = interpolate.interp1d([0,p1,p2,self.max_trans_time], [311.2612,311.2612,373.1311,373.1311])
+            C_sched = interpolate.interp1d([0, p1, p2, self.max_trans_time], [8.5698, 8.5698, 2, 2])
+            T_sched = interpolate.interp1d([0, p1, p2, self.max_trans_time], [311.2612, 311.2612, 373.1311, 373.1311])
             
             # Store the current iteration in auxiliary variable.
             k = t_now
