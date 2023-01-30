@@ -84,10 +84,12 @@ class CSTRSimulation():
         Cref_signal: Reference Cref & Tref to be followed by our control.
           Values that Cref_signal can take:
             (0) N/A  ---> STATIC: Cref == Tref == 0.
-            (1) Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1), from its 0 to 52.
-            (2) STEADY STATE: (Cref, Tref) sustained at (2, 373.1).
-            (3) STEADY STATE: (Cref, Tref) sustained at (8.57, 311.3).
-            (4) Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1), from its 22 to 74.
+            (1) Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1), from its 0 to 52. (in half a sec)
+            (2) Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1), from its 20 to 72. (in half a sec)
+            (3) Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1), from its 40 to 92. (in half a sec)
+            (4) Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1), from its 60 to 102. (in half a sec)
+            (5) STEADY STATE: (Cref, Tref) sustained at (8.57, 311.3).
+            (6) STEADY STATE: (Cref, Tref) sustained at (2, 373.1).
         
         noise_percentage: Noise value to apply to states/actions.
             int[0, 1]
@@ -103,10 +105,10 @@ class CSTRSimulation():
         """
 
         # Default initialization values
-        self.Cref_signal: float = 4
+        self.Cref_signal: float = 1
         self.noise_percentage: float = 0
         self.step_time: float = Δt_sim
-        self.transition_start: float = 11
+        self.transition_start: float = None
         self.edo_solver_n_its: int = 2
 
         # Config vars received
@@ -151,44 +153,44 @@ class CSTRSimulation():
 
         ## INITIALIZE ENVIRONMENT VARIABLES BASED ON VALUE OF Cref_signal.
 
-        # TODO: Do we really need Cref_signal == 0?
-        # Declare initial conditions for current signal selection.
-        if self.Cref_signal == 0:
-            self.Cref = 0
-            self.Tref = 0
-            # TODO: What do we do with initialization values when Cref_signal == 0?
-            self.Cr = 8.5698
-            self.Tr = 311.2612
+        if self.transition_start != None:
+            # Ensure provided value is valid since its used for internal computation.
+            self.transition_start = max(0, self.transition_start)
+            self.transition_start = int(self.transition_start)
+        else:
+            # Set transition_start to zero if non provided.
+            self.transition_start = 1
+
+        # Declare initial conditions for TRANSIENT signal and STEADY that start at Cr == 8.57.
+        if self.Cref_signal >= 1 and self.Cref_signal <= 5:
+            if self.Cref_signal == 1:
+                # No setup of transition_start for Cref signal == 1.
+                pass
+            elif self.Cref_signal == 2:
+                # Setup transition time based on Cref signal. (takes priority over transition_start)
+                self.transition_start = 20
+            elif self.Cref_signal == 3:
+                # Setup transition time based on Cref signal. (takes priority over transition_start)
+                self.transition_start = 40
+            elif self.Cref_signal == 4:
+                # Setup transition time based on Cref signal. (takes priority over transition_start)
+                self.transition_start = 60
+                
+            # Update system values (Tc).
             self.Tc = 292
-        
-        # Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1).
-        # Declare initial conditions for current signal selection.
-        elif self.Cref_signal == 1 \
-             or self.Cref_signal == 4:
-            self.Cr = 8.5698
-            self.Tr = 311.2612
-            self.Tc = 292
-            self.Cref = self.Cr
-            self.Tref = self.Tr
         
         # STEADY STATE: (Cref, Tref) sustained at (2, 373.1).
-        # Declare initial conditions for current signal selection.
-        elif self.Cref_signal == 2:
-            self.Cr = 2
-            self.Tr = 373.1311
-            self.Tc = 0 # TODO: Update correct value of coolant temp.
-            self.Cref = self.Cr
-            self.Tref = self.Tr
+        if self.Cref_signal == 6:
+            # Update system values (Tc).
+            self.Tc = 305.0348
         
-        # STEADY STATE: (Cref, Tref) sustained at (8.57, 311.3).
-        # Declare initial conditions for current signal selection.
-        elif self.Cref_signal == 3:
-            self.Cr = 8.5698
-            self.Tr = 311.2612
-            self.Tc = 292
-            self.Cref = self.Cr
-            self.Tref = self.Tr
-
+        # Update references.
+        self.Cref, self.Tref = self.update_references(1)
+        
+        # Update system values to match references.
+        self.Cr_no_noise = self.Cref   # Concentration of the reactor's output, clean (without noise introduced).
+        self.Tr_no_noise = self.Tref   # Temperature of the reactor's output, clean (without noise introduced).
+        
         # UPDATE ENV CONDITIONS BASED ON SYSTEM NOISE
         # Define step to introduce to states based on noise_percentage.
         C_max_range = (8.5698 - 2)
@@ -196,9 +198,6 @@ class CSTRSimulation():
         error_var = self.noise_percentage
         Cr_error = error_var * random.uniform(-C_max_range, C_max_range)
         Tr_error = error_var * random.uniform(-T_max_range, T_max_range)
-
-        self.Tr_no_noise = self.Tr     # Temperature of the reactor's output, clean (without noise introduced).
-        self.Cr_no_noise = self.Cr     # Concentration of the reactor's output, clean (without noise introduced).
         # Add noise for inputs to be read by the brain, or selected control.
         self.Tr += Tr_error     # Tr - Temperature of the reactor's output.
         self.Cr += Cr_error     # Cr - Concentration of the reactor's output.
@@ -318,8 +317,7 @@ class CSTRSimulation():
     def update_references(self, t_now):
         
         # Transition from (Cref, Tref) of (8.57, 311.3) to (2, 373.1).
-        if self.Cref_signal == 1 \
-            or self.Cref_signal == 4:
+        if self.Cref_signal >= 1 and self.Cref_signal <= 4:
             # Select the transient data desired.
             p1 = int(self.transition_start/self.step_time)
             p2 = p1 + int(26/self.step_time)
@@ -337,8 +335,14 @@ class CSTRSimulation():
             aux_Tref = float(T_sched(k))
         
         # Let references be static for the remaining tests.
+        elif self.Cref_signal == 5:
+            aux_Cref, aux_Tref = 8.5698, 311.2612
+        
+        # Let references be static for the remaining tests.
         else:
-            aux_Cref, aux_Tref = self.Cref, self.Tref
+        #elif self.Cref_signal == 6:
+            aux_Cref, aux_Tref = 2, 373.1311
+
 
         return aux_Cref, aux_Tref
     
