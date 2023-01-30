@@ -42,7 +42,7 @@ class linear_mpc(CSTRSimulation):
             print(f"No valid actions parsed to compute_action function in linear-mpc control. Received action Dict == {action}")
 
         # Run Linear MPC model.
-        new_Tc = self.compute_best_action(self.tr_init)
+        new_Tc = self.compute_best_action(self.lin_mpc_Tr_init)
         # Get action for simulation.
         Tc_adjust = new_Tc - self.Tc
         action = dict([("Tc_adjust", Tc_adjust)])
@@ -73,7 +73,9 @@ class linear_mpc(CSTRSimulation):
         # GEKKO linear MPC
         self.m = GEKKO(remote=self.remote_server)
 
-        self.m.time = np.linspace(0, 45, num=90) #simulate 45 minutes (0.5 minute per controller action)
+        ep_length_secs = 45
+        ep_length_its = int(ep_length_secs/self.step_time)
+        self.m.time = np.linspace(0, ep_length_secs, num=ep_length_its) #simulate 45 minutes (0.5 minute per controller action)
 
         # initial conditions
         self.Tc0 = self.Tc
@@ -92,8 +94,9 @@ class linear_mpc(CSTRSimulation):
         # MV tuning - Cooling Temp
         self.m.Tc.STATUS = 1
         self.m.Tc.FSTATUS = 0
-        self.m.Tc.DMAXHI = 10   # constrain movement up
-        self.m.Tc.DMAXLO = -10  # quick action down
+        Tc_adjust_limit = 10*self.step_time
+        self.m.Tc.DMAXHI = Tc_adjust_limit   # constrain movement up
+        self.m.Tc.DMAXLO = -Tc_adjust_limit  # quick action down
         
         # CV tuning - Tr Reactor Temp
         self.m.T.STATUS = 1
