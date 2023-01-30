@@ -49,6 +49,9 @@ class non_lin_mpc(CSTRSimulation):
         action: Dict[str, Any] = {}
     ):
 
+        if self.debug:
+            print(f"[NON-LIN-MPC] STEP: Method called. Received action Dict == {action}")
+
         # Take in and apply MPC characteristics to be updated.
         nonlin_mpc_Tc_init = None
         if "nonlin_mpc_Tc_init" in action.keys():
@@ -64,22 +67,34 @@ class non_lin_mpc(CSTRSimulation):
         action = dict([("Tc_adjust", Tc_adjust)])
         self.nonlin_mpc_Tc_adjust = Tc_adjust
 
+        if self.debug:
+            print(f"[NON-LIN-MPC] STEP: Call super step. Action Dict == {action}")
 
         # Run simulation model with recommended action by Linear MPC.
         super().step(action)
         
+        if self.debug:
+            print(f"[NON-LIN-MPC] STEP: Exit step function.")
+        
 
     def get_state(self):
+
+        if self.debug:
+            print(f"[NON-LIN-MPC] GET_STATE: Method called.")
 
         # Get sim states.
         states = super().get_state()
 
+        if self.debug:
+            print(f"[NON-LIN-MPC] GET_STATE: Append extra states to received states: {states}.")
 
         # Last Tc_adjust used by MPC.
         states["nonlin_mpc_Tc_init"] = float(self.nonlin_mpc_Tc_init)
         # Append recommended value of Tc_adjust (before being capped by solver).
         states["nonlin_mpc_Tc_adjust"] = float(self.nonlin_mpc_Tc_adjust)
 
+        if self.debug:
+            print(f"[NON-LIN-MPC] GET_STATE: Retrieve final states after addition: {states}.")
 
         return states
 
@@ -87,6 +102,8 @@ class non_lin_mpc(CSTRSimulation):
 
     def init_control(self, nonlin_mpc_Tc_init = None):
 
+        if self.debug:
+            print(f"[NON-LIN-MPC] INIT_CONTROL: Method called.")
 
         Cr0 = self.Cr
         Tr0 = self.Tr
@@ -105,7 +122,7 @@ class non_lin_mpc(CSTRSimulation):
                              step_time = self.step_time,
                              edo_solver_n_its = 1,
                              debug=False)
-            
+        
         # MPC MODEL
         self.model_type = 'continuous' # either 'discrete' or 'continuous'
         self.model = do_mpc.model.Model(self.model_type)
@@ -256,6 +273,9 @@ class non_lin_mpc(CSTRSimulation):
 
 
     def compute_best_action(self, XX):
+
+        if self.debug:
+            print(f"[NON-LIN-MPC] COMPUTE_BEST_ACTION: Method called. XX == {XX}")
 
         k = int(self.it_time/self.step_time)
         

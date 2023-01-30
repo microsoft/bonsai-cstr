@@ -34,6 +34,9 @@ class linear_mpc(CSTRSimulation):
         action: Dict[str, Any] = {}
     ):
 
+        if self.debug:
+            print(f"[LIN-MPC] STEP: Method called. Received action Dict == {action}")
+
         # Take in and apply MPC characteristics to be updated.
         self.lin_mpc_Tr_init = 2
         if "lin_mpc_Tr_init" in action.keys():
@@ -66,6 +69,9 @@ class linear_mpc(CSTRSimulation):
 
 
     def init_control(self):
+
+        if self.debug:
+            print(f"[LIN-MPC] INIT_CONTROL: Method called.")
 
         self.remote_server = True
         self.display_mpc_vals = False
@@ -115,6 +121,8 @@ class linear_mpc(CSTRSimulation):
 
     def compute_best_action(self, lin_mpc_Tr_init):
 
+        if self.debug:
+            print(f"[LIN-MPC] COMPUTE_BEST_ACTION: Method called. lin_mpc_Tr_init = {lin_mpc_Tr_init}.")
 
         tr_init_abs = self.Tr + lin_mpc_Tr_init
 
