@@ -92,7 +92,7 @@ class CSTRSimulation():
             (6) STEADY STATE: (Cref, Tref) sustained at (2, 373.1).
         
         noise_percentage: Noise value to apply to states/actions.
-            int[0, 1]
+            int[0, 100]
 
         step_time: Step time in between actions.
             float(0.5, 1, 1.5)
@@ -116,7 +116,7 @@ class CSTRSimulation():
         if "Cref_signal" in config.keys():
             self.Cref_signal = config["Cref_signal"]
         if "noise_percentage" in config.keys():
-            self.noise_percentage = config["noise_percentage"]
+            self.noise_percentage = config["noise_percentage"]/100
         if "step_time" in config.keys():
             self.step_time = config["step_time"]
         if "transition_start" in config.keys():
